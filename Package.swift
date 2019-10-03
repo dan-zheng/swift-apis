@@ -28,8 +28,11 @@ let package = Package(
     dependencies: [],
     targets: [
         .target(
-            name: "TensorFlow",
+            name: "CTensorFlow",
             dependencies: []),
+        .target(
+            name: "TensorFlow",
+            dependencies: ["CTensorFlow"]),
         .target(
             name: "Experimental",
             dependencies: [],
@@ -40,5 +43,6 @@ let package = Package(
         .testTarget(
             name: "TensorFlowTests",
             dependencies: ["TensorFlow"]),
-    ]
+    ],
+    cxxLanguageStandard: .cxx11
 )
