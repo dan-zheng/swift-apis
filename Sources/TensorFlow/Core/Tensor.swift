@@ -347,6 +347,7 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
 /// - Note: Do not ever use this API directly. This is implicitly created
 ///   during the conversion from an array literal to a `Tensor`, and is purely
 ///   for implementation purposes.
+/// :nodoc:
 @frozen
 public struct _TensorElementLiteral<Scalar>: TensorProtocol where Scalar: TensorFlowScalar {
     @usableFromInline let tensor: Tensor<Scalar>

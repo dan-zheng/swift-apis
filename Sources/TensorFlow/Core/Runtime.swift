@@ -163,6 +163,7 @@ private func configureRuntimeFromEnvironment() {
 }
 
 /// The host of any tensor computation.
+/// :nodoc:
 public final class _ExecutionContext {
     /// Global context storing all available devices, loaded functions, etc.
     public static let global: _ExecutionContext = _ExecutionContext()
