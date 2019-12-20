@@ -81,7 +81,7 @@ public extension Tensor where Scalar: TensorFlowNumeric {
     /// ```
     @inlinable
     @differentiable(wrt: self, vjp: _vjpBandPart where Scalar: TensorFlowFloatingPoint)
-    func bandPart(_ lowerCount: Int, _ upperCount: Int) -> Tensor {
+    func bandPart(lowerCount: Int, upperCount: Int) -> Tensor {
         precondition(rank >= 2, "The tensor must have at least rank 2.")
         let lower = Tensor<Int32>(Int32(lowerCount))
         let upper = Tensor<Int32>(Int32(upperCount))
@@ -101,8 +101,9 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 
     @inlinable
-    func _vjpBandPart(_ numLower: Int, _ numUpper: Int) -> (Tensor, (Tensor) -> Tensor) {
-        (bandPart(numLower, numUpper), { $0.bandPart(numLower, numUpper) })
+    func _vjpBandPart(lowerCount: Int, upperCount: Int) -> (Tensor, (Tensor) -> Tensor) {
+        let value = bandPart(lowerCount: lowerCount, upperCount: upperCount)
+        return (value, { $0.bandPart(lowerCount: lowerCount, upperCount: upperCount) })
     }
 }
 
