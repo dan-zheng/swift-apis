@@ -26,10 +26,13 @@
 public struct Dense<Scalar: TensorFlowFloatingPoint>: Layer {
     /// The weight matrix.
     public var weight: Tensor<Scalar>
+
     /// The bias vector.
     public var bias: Tensor<Scalar>
+
     /// The element-wise activation function.
     @noDerivative public let activation: Activation
+
     /// Indicates whether this is a batched dense layer.
     @noDerivative internal let batched: Bool
 
@@ -63,7 +66,7 @@ public struct Dense<Scalar: TensorFlowFloatingPoint>: Layer {
     }
 }
 
-public extension Dense {
+extension Dense {
     /// Creates a `Dense` layer with the specified input size, output size, and element-wise
     /// activation function. The weight matrix is created with shape `[inputSize, outputSize]` and
     /// the bias vector is created with shape `[outputSize]`.
@@ -74,7 +77,7 @@ public extension Dense {
     ///   - activation: The activation function to use. The default value is `identity(_:)`.
     ///   - weightInitializer: Initializer to use for `weight`.
     ///   - biasInitializer: Initializer to use for `bias`.
-    init(
+    public init(
         inputSize: Int,
         outputSize: Int,
         activation: @escaping Activation = identity,

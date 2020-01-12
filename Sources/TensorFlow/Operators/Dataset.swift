@@ -15,7 +15,7 @@
 /// The default graph seed.
 ///
 /// - Note: See TensorFlow's `python.framework.random_seed.DEFAULT_GRAPH_SEED`.
-@usableFromInline let _defaultGraphSeed: Int64 = 87654321
+@usableFromInline let _defaultGraphSeed: Int64 = 87_654_321
 
 /// Returns the local seeds an operation should use given an op-specific seed.
 ///
@@ -49,25 +49,27 @@ public struct Dataset<Element: TensorGroup> {
     }
 }
 
-public extension Dataset {
+extension Dataset {
     @inlinable
-    init(randomSeed: Int64) {
+    public init(randomSeed: Int64) {
         let (seed1, seed2) = _tensorSeeds(Tensor(randomSeed))
-        self.init(_handle: _Raw.experimentalRandomDataset(
-            seed: seed1,
-            seed2: seed2,
-            outputTypes: Element._typeList,
-            outputShapes: Element._unknownShapeList))
+        self.init(
+            _handle: _Raw.experimentalRandomDataset(
+                seed: seed1,
+                seed2: seed2,
+                outputTypes: Element._typeList,
+                outputShapes: Element._unknownShapeList))
     }
 }
 
-public extension Dataset {
+extension Dataset {
     /// Creates a dataset from a batch of elements as a tensor.
     @inlinable
-    init(elements: Element) {
-        self.init(_handle: _Raw.tensorSliceDataset(
-            components: [elements],
-            outputShapes: Element._unknownShapeList))
+    public init(elements: Element) {
+        self.init(
+            _handle: _Raw.tensorSliceDataset(
+                components: [elements],
+                outputShapes: Element._unknownShapeList))
     }
 }
 
@@ -85,94 +87,101 @@ extension Dataset: Sequence {
     }
 }
 
-public extension Dataset {
+extension Dataset {
     // Note that this Dataset API implementation uses an experimental tracing feature, which is not
     // robust and does not have great diagnostics yet.
     @inlinable
-    func map<ResultElement: TensorGroup>(
+    public func map<ResultElement: TensorGroup>(
         _ transform: (Element) -> ResultElement
     ) -> Dataset<ResultElement> {
-        return Dataset<ResultElement>(_handle: _Raw.mapDataset(
-            inputDataset: _handle,
-            otherArguments: Tensor<Int32>(0),
-            f: transform,
-            outputTypes: ResultElement._typeList,
-            outputShapes: ResultElement._unknownShapeList,
-            useInterOpParallelism: true,
-            preserveCardinality: false))
+        return Dataset<ResultElement>(
+            _handle: _Raw.mapDataset(
+                inputDataset: _handle,
+                otherArguments: Tensor<Int32>(0),
+                f: transform,
+                outputTypes: ResultElement._typeList,
+                outputShapes: ResultElement._unknownShapeList,
+                useInterOpParallelism: true,
+                preserveCardinality: false))
     }
 
     @inlinable
-    func map<ResultElement : TensorGroup>(
+    public func map<ResultElement: TensorGroup>(
         parallelCallCount: Int,
         _ transform: (Element) -> ResultElement
     ) -> Dataset<ResultElement> {
-        return Dataset<ResultElement>(_handle: _Raw.parallelMapDataset(
-            inputDataset: _handle,
-            otherArguments: Tensor<Int32>(0),
-            numParallelCalls: Tensor<Int32>(Int32(parallelCallCount)),
-            f: transform,
-            outputTypes: ResultElement._typeList,
-            outputShapes: ResultElement._unknownShapeList,
-            useInterOpParallelism: true,
-            sloppy: false,
-            preserveCardinality: false))
+        return Dataset<ResultElement>(
+            _handle: _Raw.parallelMapDataset(
+                inputDataset: _handle,
+                otherArguments: Tensor<Int32>(0),
+                numParallelCalls: Tensor<Int32>(Int32(parallelCallCount)),
+                f: transform,
+                outputTypes: ResultElement._typeList,
+                outputShapes: ResultElement._unknownShapeList,
+                useInterOpParallelism: true,
+                sloppy: false,
+                preserveCardinality: false))
     }
 
     @inlinable
-    func filter(_ isIncluded: (Element) -> Tensor<Bool>) -> Dataset {
-        return Dataset(_handle: _Raw.filterDataset(
-            inputDataset: _handle,
-            otherArguments: Tensor<Int32>(0),
-            predicate: isIncluded,
-            outputTypes: Element._typeList,
-            outputShapes: Element._unknownShapeList))
+    public func filter(_ isIncluded: (Element) -> Tensor<Bool>) -> Dataset {
+        return Dataset(
+            _handle: _Raw.filterDataset(
+                inputDataset: _handle,
+                otherArguments: Tensor<Int32>(0),
+                predicate: isIncluded,
+                outputTypes: Element._typeList,
+                outputShapes: Element._unknownShapeList))
     }
 }
 
-public extension Dataset {
+extension Dataset {
     @inlinable
-    func prefetched(count: Int) -> Dataset {
-        return Dataset(_handle: _Raw.prefetchDataset(
-            inputDataset: _handle,
-            bufferSize: Tensor(Int64(count)),
-            outputTypes: Element._typeList,
-            outputShapes: Element._unknownShapeList))
+    public func prefetched(count: Int) -> Dataset {
+        return Dataset(
+            _handle: _Raw.prefetchDataset(
+                inputDataset: _handle,
+                bufferSize: Tensor(Int64(count)),
+                outputTypes: Element._typeList,
+                outputShapes: Element._unknownShapeList))
     }
 
     @inlinable
-    func shuffled(
+    public func shuffled(
         sampleCount: Int,
         randomSeed: Int64,
         reshuffleForEachIterator: Bool = true
     ) -> Dataset {
         let (seed1, seed2) = _tensorSeeds(Tensor(randomSeed))
-        return Dataset(_handle: _Raw.shuffleDataset(
-            inputDataset: _handle,
-            bufferSize: Tensor(Int64(sampleCount)),
-            seed: seed1,
-            seed2: seed2,
-            reshuffleEachIteration: reshuffleForEachIterator,
-            outputTypes: Element._typeList,
-            outputShapes: Element._unknownShapeList))
+        return Dataset(
+            _handle: _Raw.shuffleDataset(
+                inputDataset: _handle,
+                bufferSize: Tensor(Int64(sampleCount)),
+                seed: seed1,
+                seed2: seed2,
+                reshuffleEachIteration: reshuffleForEachIterator,
+                outputTypes: Element._typeList,
+                outputShapes: Element._unknownShapeList))
     }
 
     @inlinable
-    func batched(_ batchSize: Int) -> Dataset {
-        return Dataset(_handle: _Raw.batchDataset(
-            inputDataset: _handle,
-            batchSize: Tensor(Int64(batchSize)),
-            outputTypes: Element._typeList,
-            outputShapes: Element._unknownShapeList))
+    public func batched(_ batchSize: Int) -> Dataset {
+        return Dataset(
+            _handle: _Raw.batchDataset(
+                inputDataset: _handle,
+                batchSize: Tensor(Int64(batchSize)),
+                outputTypes: Element._typeList,
+                outputShapes: Element._unknownShapeList))
     }
 
     @inlinable
-    func repeated(count: Int? = nil) -> Dataset {
-        return Dataset(_handle: _Raw.repeatDataset(
-            inputDataset: _handle,
-            count: Tensor(Int64(count ?? -1)),
-            outputTypes: Element._typeList,
-            outputShapes: Element._unknownShapeList))
+    public func repeated(count: Int? = nil) -> Dataset {
+        return Dataset(
+            _handle: _Raw.repeatDataset(
+                inputDataset: _handle,
+                count: Tensor(Int64(count ?? -1)),
+                outputTypes: Element._typeList,
+                outputShapes: Element._unknownShapeList))
     }
 }
 
@@ -216,7 +225,7 @@ public struct Zip2TensorGroup<T: TensorGroup, U: TensorGroup>: TensorGroup {
         self.second = second
     }
 
-    public var  _tensorHandles: [_AnyTensorHandle] {
+    public var _tensorHandles: [_AnyTensorHandle] {
         first._tensorHandles + second._tensorHandles
     }
 

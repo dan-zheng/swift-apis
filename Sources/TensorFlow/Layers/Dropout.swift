@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-fileprivate extension Tensor where Scalar: TensorFlowFloatingPoint {
-     /// Computes dropout given a probability.
-     // TODO: Remove the underscore once `droppingOut(probability:)` has been removed.
+extension Tensor where Scalar: TensorFlowFloatingPoint {
+    /// Computes dropout given a probability.
+    // TODO: Remove the underscore once `droppingOut(probability:)` has been removed.
     @differentiable(wrt: self where Scalar: Differentiable)
-    func _droppingOut(probability: Double) -> Tensor {
+    fileprivate func _droppingOut(probability: Double) -> Tensor {
         let noise = Tensor(randomUniform: shape)
         let keepMask = noise .>= Scalar(probability)
         let keepProbability = Scalar(1.0 - probability)
@@ -24,14 +24,18 @@ fileprivate extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 }
 
-public extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// Computes dropout given a probability.
-    @available(*, deprecated, message: """
+    @available(
+        *, deprecated,
+        message:
+            """
         This API will be removed after Swift for TensorFlow 0.6.
         For dropout, use the `Dropout` layer.
-        """)
+        """
+    )
     @differentiable(wrt: self where Scalar: Differentiable)
-    func droppingOut(probability: Double) -> Tensor {
+    public func droppingOut(probability: Double) -> Tensor {
         _droppingOut(probability: probability)
     }
 }
@@ -49,7 +53,8 @@ public struct Dropout<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer {
     /// - Parameter probability: The probability of a node dropping out.
     /// - Precondition: probability must be a value between 0 and 1 (inclusive). 
     public init(probability: Double) {
-        precondition(0...1 ~= probability,
+        precondition(
+            0...1 ~= probability,
             "Probability must be a value between 0 and 1 (inclusive) but is \(probability)")
         self.probability = probability
     }

@@ -29,14 +29,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
-import Darwin
-#elseif os(Windows)
-import ucrt
-#else
-import Glibc
-#endif
 import CTensorFlow
+
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+    import Darwin
+#elseif os(Windows)
+    import ucrt
+#else
+    import Glibc
+#endif
 
 /// The configuration for the compiler runtime.
 // TODO(hongm): Revisit the longer-term design.
@@ -61,6 +62,7 @@ public enum _RuntimeConfig {
         case local
         case remote(serverDef: String)
     }
+
     static public var session: RuntimeSession = .local
 
     /// When true, use lazy evaluation.
@@ -86,13 +88,15 @@ public enum _RuntimeConfig {
 
 private func configureRuntimeFromEnvironment() {
     if let value = getenv("SWIFT_TENSORFLOW_ENABLE_DEBUG_LOGGING"),
-       String(cString: value).lowercased() == "true" {
-            _RuntimeConfig.printsDebugLog = true
-            debugLog("Turning on debug logging from env.")
+        String(cString: value).lowercased() == "true"
+    {
+        _RuntimeConfig.printsDebugLog = true
+        debugLog("Turning on debug logging from env.")
     }
 
     if let value = getenv("SWIFT_TENSORFLOW_ENABLE_LAZY_TENSOR"),
-        String(cString: value).lowercased() == "true" {
+        String(cString: value).lowercased() == "true"
+    {
         _RuntimeConfig.useLazyTensor = true
         debugLog("Turning on lazy tensor from env.")
     }
@@ -117,30 +121,32 @@ private func configureRuntimeFromEnvironment() {
         } else {
             guard let idx = address.firstIndex(of: ":"),
                 let endIdx = address.index(idx, offsetBy: 3, limitedBy: address.endIndex),
-                address[idx..<endIdx] == "://" else {
+                address[idx..<endIdx] == "://"
+            else {
                 fatalError("SWIFT_TENSORFLOW_SERVER_ADDRESS must start with 'grpc://'.")
             }
 
             let `protocol` = address[address.startIndex..<idx]
             let target = address[endIdx..<address.endIndex]
-            _RuntimeConfig.session = .remote(serverDef: """
-                cluster {
-                job {
-                    name: "localhost"
-                    tasks {
-                    key: 0
-                    value: "127.0.0.1:0"
+            _RuntimeConfig.session = .remote(
+                serverDef: """
+                    cluster {
+                    job {
+                        name: "localhost"
+                        tasks {
+                        key: 0
+                        value: "127.0.0.1:0"
+                        }
+                        tasks {
+                        key: 1
+                        value: "\(target)"
+                        }
                     }
-                    tasks {
-                    key: 1
-                    value: "\(target)"
                     }
-                }
-                }
-                job_name: "localhost"
-                task_index: 0
-                protocol: "\(`protocol`)"
-                """)
+                    job_name: "localhost"
+                    task_index: 0
+                    protocol: "\(`protocol`)"
+                    """)
             debugLog("Setting TF server address to \(address) from env.")
 
             // At the moment, without TF_EAGER_REMOTE_USE_SEND_TENSOR_RPC=1, running on TPUs freezes.
@@ -251,13 +257,15 @@ public final class _ExecutionContext {
             debugLog("Allowing growth for GPU memory allocator.")
         }
         self.tensorFlowConfig = TF_CreateConfig(
-            /* enable_xla_compilation */ 0,
+            // enable_xla_compilation
+            0,
             _RuntimeConfig.gpuMemoryAllowGrowth ? 1 : 0,
             _RuntimeConfig.cpuDeviceCount)
-        TFE_ContextOptionsSetConfig(opts,
-                                    tensorFlowConfig.pointee.data,
-                                    tensorFlowConfig.pointee.length,
-                                    status)
+        TFE_ContextOptionsSetConfig(
+            opts,
+            tensorFlowConfig.pointee.data,
+            tensorFlowConfig.pointee.length,
+            status)
         checkOk(status)
 
         let ctx = TFE_NewContext(opts, status)
@@ -271,7 +279,7 @@ public final class _ExecutionContext {
             let serverDef: UnsafeMutablePointer<TF_Buffer>! = TFE_GetServerDef(serverDef, status)
             checkOk(status)
             TFE_ContextSetServerDef(
-                eagerContext, /*keep_alive_secs*/0, serverDef.pointee.data,
+                eagerContext, /*keep_alive_secs*/ 0, serverDef.pointee.data,
                 serverDef.pointee.length, status)
             checkOk(status)
             TF_DeleteBuffer(serverDef)
@@ -336,7 +344,7 @@ public func _graph<In: TensorGroup, Out: TensorGroup>(
     useXLA: Bool = false
 ) -> (In) -> Out {
     let tffunc = _trace(fn)
-    return {input in
+    return { input in
         let inputHandles = input._tensorHandles.map { $0._tfeTensorHandle }
         let outputHandles = tffunc.execute(inputHandles, usingXLA: useXLA)
         return Out(_handles: outputHandles)
@@ -350,7 +358,7 @@ public func _tffunc<In: TensorGroup, Out: TensorGroup>(_ fn: (In) -> Out) -> Str
     return tffunc.name
 }
 
-internal extension _ExecutionContext {
+extension _ExecutionContext {
     /// Returns a valid TensorFlow device name, which corresponds to the closest enclosing call to
     /// one of the overloads of withDevice. A return value of `nil` indicates the absence of a
     /// withDevice call on the call stack or the presence of an immediately enclosing
@@ -399,7 +407,7 @@ internal extension _ExecutionContext {
     }
 }
 
-internal extension _ExecutionContext {
+extension _ExecutionContext {
     /// Synchronously execute the body, preventing asynchronous computation from corrupting the
     /// context data.
     private func sync<Result>(execute body: () throws -> Result) rethrows -> Result {
@@ -425,7 +433,8 @@ func _TFCEagerExecute(
     if _RuntimeConfig.printsDebugLog {
         debugLog("Calling _TFCEagerExecute() over: ")
         if let value = getenv("TF_CPP_MIN_LOG_LEVEL"),
-            String(cString: value) == "0" {
+            String(cString: value) == "0"
+        {
             TFE_OpPrintDebugString(op)
         } else {
             debugLog("[Run with TF_CPP_MIN_LOG_LEVEL=0 to have TFEOps printed out]")
@@ -488,7 +497,7 @@ func _TFCOpAddInputFromAnyTensors(_ op: CTFEOp, _ tensors: [AnyTensor], _ status
 func _TFCOpSetAttrTypeArray(
     _ op: CTFEOp,
     _ attrName: UnsafePointer<Int8>,
-    _ value: Array<TensorDataType>
+    _ value: [TensorDataType]
 ) {
     value.withUnsafeBufferPointer { buffer in
         buffer.withMemoryRebound(to: TF_DataType.self) { reboundBuffer in
@@ -523,11 +532,11 @@ class _ThreadLocalState {
     private static let key: pthread_key_t = {
         var key = pthread_key_t()
         pthread_key_create(&key) {
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
-            let _: AnyObject = Unmanaged.fromOpaque($0).takeRetainedValue()
-#else
-            let _: AnyObject = Unmanaged.fromOpaque($0!).takeRetainedValue()
-#endif
+            #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+                let _: AnyObject = Unmanaged.fromOpaque($0).takeRetainedValue()
+            #else
+                let _: AnyObject = Unmanaged.fromOpaque($0!).takeRetainedValue()
+            #endif
         }
         return key
     }()

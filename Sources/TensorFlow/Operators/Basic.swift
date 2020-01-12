@@ -25,15 +25,15 @@ public func identity<Scalar>(_ x: Tensor<Scalar>) -> Tensor<Scalar> {
 // Shape Transformations
 //===------------------------------------------------------------------------------------------===//
 
-public extension TensorFlowScalar {
+extension TensorFlowScalar {
     /// Convert to a tensor with the specified rank, with all dimensions equal to `1`.
     @inlinable
-    func makeTensor(rank: Int) -> Tensor<Self> {
+    public func makeTensor(rank: Int) -> Tensor<Self> {
         return Tensor(repeating: self, shape: TensorShape(rank))
     }
 }
 
-public extension Tensor {
+extension Tensor {
     /// Unpacks the given dimension of a rank-`R` tensor into multiple rank-`(R-1)` tensors.
     /// Unpacks `N` tensors from this tensor by chipping it along the `axis` dimension, where `N`
     /// is inferred from this tensor's shape. For example, given a tensor with shape
@@ -58,7 +58,7 @@ public extension Tensor {
     /// - Returns: Array containing the unstacked tensors.
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    func unstacked(alongAxis axis: Int = 0) -> [Tensor] {
+    public func unstacked(alongAxis axis: Int = 0) -> [Tensor] {
         precondition(isAxisInRange(axis), "Axis must be in the range `[-rank, rank)`.")
         let posAxis = axis < 0 ? axis + rank : axis
         return _Raw.unpack(value: self, num: Int64(shape[posAxis]), axis: Int64(posAxis))
@@ -88,7 +88,7 @@ public extension Tensor {
     /// - Returns: An array containing the tensors part.
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    func split(count: Int, alongAxis axis: Int = 0) -> [Tensor] {
+    public func split(count: Int, alongAxis axis: Int = 0) -> [Tensor] {
         precondition(isAxisInRange(axis), "Axis must be in the range `[-rank, rank)`.")
         precondition(
             shapeTensor[axis].scalarized() % Int32(count) == 0,
@@ -121,7 +121,7 @@ public extension Tensor {
     /// - Returns: Array containing the tensors parts.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func split(sizes: Tensor<Int32>, alongAxis axis: Int = 0) -> [Tensor] {
+    public func split(sizes: Tensor<Int32>, alongAxis axis: Int = 0) -> [Tensor] {
         precondition(isAxisInRange(axis), "Axis must be in the range `[-rank, rank)`.")
         precondition(
             shapeTensor[axis] == sizes.sum(),
@@ -144,7 +144,7 @@ public extension Tensor {
     /// - Precondition: The shape of `multiples` must be `[tensor.rank]`.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func tiled(multiples: Tensor<Int32>) -> Tensor {
+    public func tiled(multiples: Tensor<Int32>) -> Tensor {
         precondition(multiples.rank == 1, "The expected rank of multiples must be 1.")
         precondition(
             rank == multiples.shapeTensor.scalarized(),
@@ -156,7 +156,7 @@ public extension Tensor {
     /// - Precondition: The number of scalars matches the new shape.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func reshaped<T>(like other: Tensor<T>) -> Tensor {
+    public func reshaped<T>(like other: Tensor<T>) -> Tensor {
         reshaped(toShape: other.shapeTensor)
     }
 
@@ -164,19 +164,19 @@ public extension Tensor {
     /// - Precondition: The number of scalars matches the new shape.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func reshaped(to newShape: TensorShape) -> Tensor {
+    public func reshaped(to newShape: TensorShape) -> Tensor {
         // TODO(TF-433): Remove workaround for differentiating `map`.
-        reshaped(toShape: Tensor<Int32>({newShape.dimensions.map(Int32.init)}()))
+        reshaped(toShape: Tensor<Int32>({ newShape.dimensions.map(Int32.init) }()))
     }
 
     /// Reshape to the specified `Tensor` representing a shape.
     /// - Precondition: The number of scalars matches the new shape.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func reshaped(toShape newShape: Tensor<Int32>) -> Tensor {
-        let totalNegative = newShape.scalars.filter({$0 == -1}).count
-        let positiveShapeSizes = newShape.scalars.filter({$0 > 0})
-        let newShapeScalarCount = positiveShapeSizes.reduce(1, {$0 * $1})
+    public func reshaped(toShape newShape: Tensor<Int32>) -> Tensor {
+        let totalNegative = newShape.scalars.filter({ $0 == -1 }).count
+        let positiveShapeSizes = newShape.scalars.filter({ $0 > 0 })
+        let newShapeScalarCount = positiveShapeSizes.reduce(1, { $0 * $1 })
 
         precondition(totalNegative <= 1, "Only one input size may be -1.")
 
@@ -196,7 +196,7 @@ public extension Tensor {
     /// Return a copy of the tensor collapsed into a 1-D `Tensor`, in row-major order.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func flattened() -> Tensor {
+    public func flattened() -> Tensor {
         reshaped(to: [-1])
     }
 
@@ -204,7 +204,7 @@ public extension Tensor {
     /// indices.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func expandingShape(at axes: Int...) -> Tensor {
+    public func expandingShape(at axes: Int...) -> Tensor {
         expandingShape(at: axes)
     }
 
@@ -212,7 +212,7 @@ public extension Tensor {
     /// specified shape indices.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func expandingShape(at axes: [Int]) -> Tensor {
+    public func expandingShape(at axes: [Int]) -> Tensor {
         var result = self
         for i in axes { result = _Raw.expandDims(result, dim: Tensor<Int32>(Int32(i))) }
         return result
@@ -221,7 +221,7 @@ public extension Tensor {
     /// Returns a rank-lifted `Tensor` with a leading dimension of 1.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func rankLifted() -> Tensor {
+    public func rankLifted() -> Tensor {
         expandingShape(at: 0)
     }
 
@@ -229,7 +229,7 @@ public extension Tensor {
     /// specified, then all dimensions of size 1 will be removed.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func squeezingShape(at axes: Int...) -> Tensor {
+    public func squeezingShape(at axes: Int...) -> Tensor {
         squeezingShape(at: axes)
     }
 
@@ -237,14 +237,14 @@ public extension Tensor {
     /// specified, then all dimensions of size 1 will be removed.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func squeezingShape(at axes: [Int]) -> Tensor {
+    public func squeezingShape(at axes: [Int]) -> Tensor {
         _Raw.squeeze(self, squeezeDims: axes.map(Int32.init))
     }
 }
 
-internal extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: unstacked)
+    @derivative(of:unstacked)
     func _vjpUnstacked(
         alongAxis axis: Int = 0
     ) -> (value: [Tensor], pullback: (Array<Tensor>.TangentVector) -> Tensor) {
@@ -253,17 +253,21 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 
     @inlinable
-    @derivative(of: tiled)
+    @derivative(of:tiled)
     func _vjpTiled(multiples: Tensor<Int32>) -> (value: Tensor, pullback: (Tensor) -> Tensor) {
-        (tiled(multiples: multiples), { [shape = shapeTensor] v in
-            let splitShape = Tensor<Int32>(stacking: [multiples, shape]).transposed().flattened()
-            let axes = Tensor<Int32>(rangeFrom: 0, to: Int32(splitShape.scalarCount), stride: 2)
-            return v.reshaped(toShape: splitShape).sum(squeezingAxes: axes)
-        })
+        (
+            tiled(multiples: multiples),
+            { [shape = shapeTensor] v in
+                let splitShape = Tensor<Int32>(stacking: [multiples, shape]).transposed()
+                    .flattened()
+                let axes = Tensor<Int32>(rangeFrom: 0, to: Int32(splitShape.scalarCount), stride: 2)
+                return v.reshaped(toShape: splitShape).sum(squeezingAxes: axes)
+            }
+        )
     }
 
     @inlinable
-    @derivative(of: split)
+    @derivative(of:split)
     func _vjpSplit(
         count: Int,
         alongAxis axis: Int = 0
@@ -273,7 +277,7 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 
     @inlinable
-    @derivative(of: split)
+    @derivative(of:split)
     func _vjpSplit(
         sizes: Tensor<Int32>,
         alongAxis axis: Int = 0
@@ -283,7 +287,7 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 
     @inlinable
-    @derivative(of: reshaped)
+    @derivative(of:reshaped)
     func _vjpReshaped(toShape newShape: Tensor<Int32>) -> (
         value: Tensor, pullback: (Tensor) -> Tensor
     ) {
@@ -292,14 +296,14 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 
     @inlinable
-    @derivative(of: expandingShape)
+    @derivative(of:expandingShape)
     func _vjpExpandingShape(at axes: [Int]) -> (value: Tensor, pullback: (Tensor) -> Tensor) {
         let value = self.expandingShape(at: axes)
         return (value, { v in v.squeezingShape(at: axes) })
     }
 
     @inlinable
-    @derivative(of: squeezingShape)
+    @derivative(of:squeezingShape)
     func _vjpSqueezingShape(at axes: [Int]) -> (value: Tensor, pullback: (Tensor) -> Tensor) {
         let value = squeezingShape(at: axes)
         return (value, { [shape = shapeTensor] v in v.reshaped(toShape: shape) })
@@ -312,11 +316,11 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
 
 infix operator ++: AdditionPrecedence
 
-public extension Tensor {
+extension Tensor {
     /// Returns a transposed tensor, with dimensions permuted in the specified order.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func transposed(permutation: Tensor<Int32>) -> Tensor {
+    public func transposed(permutation: Tensor<Int32>) -> Tensor {
         _Raw.transpose(self, perm: permutation)
     }
 
@@ -324,14 +328,14 @@ public extension Tensor {
     @available(*, deprecated, renamed: "transposed(permutation:)")
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func transposed(withPermutations permutations: Tensor<Int32>) -> Tensor {
+    public func transposed(withPermutations permutations: Tensor<Int32>) -> Tensor {
         transposed(permutation: permutations)
     }
 
     /// Returns a transposed tensor, with dimensions permuted in the specified order.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func transposed(permutation: [Int]) -> Tensor {
+    public func transposed(permutation: [Int]) -> Tensor {
         let permutation = permutation.map(Int32.init)
         return transposed(permutation: Tensor<Int32>(permutation))
     }
@@ -340,14 +344,14 @@ public extension Tensor {
     @available(*, deprecated, renamed: "transposed(permutation:)")
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func transposed(withPermutations permutations: [Int]) -> Tensor {
+    public func transposed(withPermutations permutations: [Int]) -> Tensor {
         transposed(permutation: permutations)
     }
 
     /// Returns a transposed tensor, with dimensions permuted in the specified order.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func transposed(permutation: Int...) -> Tensor {
+    public func transposed(permutation: Int...) -> Tensor {
         transposed(permutation: permutation)
     }
 
@@ -355,16 +359,18 @@ public extension Tensor {
     @available(*, deprecated, renamed: "transposed(permutation:)")
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func transposed(withPermutations permutations: Int...) -> Tensor {
+    public func transposed(withPermutations permutations: Int...) -> Tensor {
         transposed(permutation: permutations)
     }
 
     /// Returns a transposed tensor, with dimensions permuted in reverse order.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func transposed() -> Tensor {
-        let defaultPermutations = rankTensor - 1 - Tensor<Int32>(
-            rangeFrom: 0, to: Int32(rank), stride: 1)
+    public func transposed() -> Tensor {
+        let defaultPermutations =
+            rankTensor - 1
+            - Tensor<Int32>(
+                rangeFrom: 0, to: Int32(rank), stride: 1)
         return transposed(permutation: Tensor<Int32>(defaultPermutations))
     }
 
@@ -374,7 +380,7 @@ public extension Tensor {
     /// - Precondition: The axis must be in the range `-rank..<rank`.
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    func concatenated(with other: Tensor, alongAxis axis: Int = 0) -> Tensor {
+    public func concatenated(with other: Tensor, alongAxis axis: Int = 0) -> Tensor {
         return Tensor(concatenating: [self, other], alongAxis: axis)
     }
 
@@ -385,7 +391,7 @@ public extension Tensor {
     ///   during a later API design phase.
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    static func ++ (lhs: Tensor, rhs: Tensor) -> Tensor {
+    public static func ++ (lhs: Tensor, rhs: Tensor) -> Tensor {
         return lhs.concatenated(with: rhs)
     }
 
@@ -435,8 +441,8 @@ public extension Tensor {
     ///
     /// - Returns: The gathered tensor.
     @inlinable
-    @differentiable(wrt: self where Scalar : TensorFlowFloatingPoint)
-    func gathering<Index: TensorFlowIndex>(
+    @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
+    public func gathering<Index: TensorFlowIndex>(
         atIndices indices: Tensor<Index>,
         alongAxis axis: Int = 0
     ) -> Tensor {
@@ -463,7 +469,7 @@ public extension Tensor {
     /// - Returns: The gathered tensor.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func batchGathering<Index: TensorFlowIndex>(
+    public func batchGathering<Index: TensorFlowIndex>(
         atIndices indices: Tensor<Index>,
         alongAxis axis: Int = 1,
         batchDimensionCount: Int = 1
@@ -494,7 +500,8 @@ public extension Tensor {
                 Tensor<Int32>(rangeFrom: 0, to: Int32(batchDimensionCount), stride: 1),
                 Tensor<Int32>(Int32(axis)).rankLifted(),
                 Tensor<Int32>(rangeFrom: Int32(batchDimensionCount), to: Int32(posAxis), stride: 1),
-                Tensor<Int32>(rangeFrom: Int32(axis) + 1, to: Int32(rank), stride: 1)])
+                Tensor<Int32>(rangeFrom: Int32(axis) + 1, to: Int32(rank), stride: 1)
+            ])
             let tensor = transposed(permutation: permutation)
             let result = tensor.batchGathering(
                 atIndices: indices,
@@ -511,29 +518,33 @@ public extension Tensor {
                     rangeFrom: Int32(batchDimensionCount),
                     to: Int32(indices.rank),
                     stride: 1),
-                Tensor<Int32>(rangeFrom: Int32(start), to: Int32(result.rank), stride: 1)])
+                Tensor<Int32>(rangeFrom: Int32(start), to: Int32(result.rank), stride: 1)
+            ])
             return result.transposed(permutation: resultPermutation)
         }
 
-        let batchIndices: Tensor<Index> = withoutDerivative(at: {
-            var batchIndices = indices
-            var accumulated = Tensor<Index>(ones: [])
-            for d in (1...batchDimensionCount).reversed() {
-                accumulated *= Tensor<Index>(self.shapeTensor[d])
-                let dValue = self.shapeTensor[d - 1]
-                let dIndices = Tensor<Index>(
-                    rangeFrom: Tensor<Index>(zeros: []),
-                    to: Tensor<Index>(dValue),
-                    stride: Tensor<Index>(ones: [])
-                ) * accumulated
-                let dShape = Tensor<Int32>(concatenating: [
-                    Tensor<Int32>([Int32](repeating: 1, count: d - 1)),
-                    dValue.rankLifted(),
-                    Tensor<Int32>([Int32](repeating: 1, count: indices.rank - d))])
-                batchIndices += dIndices.reshaped(toShape: dShape)
-            }
-            return batchIndices
-        }())
+        let batchIndices: Tensor<Index> = withoutDerivative(
+            at: {
+                var batchIndices = indices
+                var accumulated = Tensor<Index>(ones: [])
+                for d in (1...batchDimensionCount).reversed() {
+                    accumulated *= Tensor<Index>(self.shapeTensor[d])
+                    let dValue = self.shapeTensor[d - 1]
+                    let dIndices =
+                        Tensor<Index>(
+                            rangeFrom: Tensor<Index>(zeros: []),
+                            to: Tensor<Index>(dValue),
+                            stride: Tensor<Index>(ones: [])
+                        ) * accumulated
+                    let dShape = Tensor<Int32>(concatenating: [
+                        Tensor<Int32>([Int32](repeating: 1, count: d - 1)),
+                        dValue.rankLifted(),
+                        Tensor<Int32>([Int32](repeating: 1, count: indices.rank - d))
+                    ])
+                    batchIndices += dIndices.reshaped(toShape: dShape)
+                }
+                return batchIndices
+            }())
 
         let flatIndices = batchIndices.flattened()
         let outerShape = shapeTensor[(batchDimensionCount + 1)...]
@@ -578,23 +589,24 @@ public extension Tensor {
     ///   corresponding to `true` values in `mask`.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func gathering(where mask: Tensor<Bool>, alongAxis axis: Int = 0) -> Tensor {
+    public func gathering(where mask: Tensor<Bool>, alongAxis axis: Int = 0) -> Tensor {
         precondition(mask.rank != 0, "The boolean mask cannot be a scalar.")
         let posAxis = withoutDerivative(at: self.rank) { r in axis < 0 ? axis + r : axis }
-        let leadingSize = shapeTensor[posAxis ..< posAxis + mask.rank].product().rankLifted()
+        let leadingSize = shapeTensor[posAxis..<posAxis + mask.rank].product().rankLifted()
         let reshapedTensor = reshaped(
             toShape: Tensor<Int32>(concatenating: [
                 shapeTensor[..<posAxis],
                 leadingSize,
-                shapeTensor[(posAxis + mask.rank)...]]))
+                shapeTensor[(posAxis + mask.rank)...]
+            ]))
         let indices = Tensor<Int32>(mask.flattened().nonZeroIndices().squeezingShape(at: 1))
         return reshapedTensor.gathering(atIndices: indices, alongAxis: posAxis)
     }
 }
 
-internal extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: transposed(permutation:))
+    @derivative(of:transposed(permutation:))
     func _vjpTransposed(permutation: Tensor<Int32>) -> (
         value: Tensor, pullback: (Tensor) -> Tensor
     ) {
@@ -603,7 +615,7 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 
     @inlinable
-    @derivative(of: transposed(permutation:))
+    @derivative(of:transposed(permutation:))
     func _vjpTransposed(permutation: [Int]) -> (value: Tensor, pullback: (Tensor) -> Tensor) {
         let permutation = Tensor<Int32>(permutation.map(Int32.init))
         let value = transposed(permutation: permutation)
@@ -611,7 +623,7 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 
     @inlinable
-    @derivative(of: transposed(permutation:))
+    @derivative(of:transposed(permutation:))
     func _vjpTransposed(permutation: Int...) -> (value: Tensor, pullback: (Tensor) -> Tensor) {
         let permutation = Tensor<Int32>(permutation.map(Int32.init))
         let value = transposed(permutation: permutation)
@@ -619,27 +631,30 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 
     @inlinable
-    @derivative(of: transposed)
+    @derivative(of:transposed)
     func _vjpTransposed() -> (value: Tensor, pullback: (Tensor) -> Tensor) {
         return (transposed(), { $0.transposed() })
     }
 
     @inlinable
-    @derivative(of: concatenated)
+    @derivative(of:concatenated)
     func _vjpConcatenated(
         with other: Tensor,
         alongAxis axis: Int
     ) -> (value: Tensor, pullback: (Tensor) -> (Tensor, Tensor)) {
-        let posAxis = axis < 0 ? axis + rank: axis
+        let posAxis = axis < 0 ? axis + rank : axis
         let splits = Tensor<Int32>([shapeTensor[posAxis], other.shapeTensor[posAxis]])
-        return (concatenated(with: other, alongAxis: axis), { result in
-            let gradients = result.split(sizes: splits, alongAxis: axis)
-            return (gradients[0], gradients[1])
-        })
+        return (
+            concatenated(with: other, alongAxis: axis),
+            { result in
+                let gradients = result.split(sizes: splits, alongAxis: axis)
+                return (gradients[0], gradients[1])
+            }
+        )
     }
 
     @inlinable
-    @derivative(of: gathering)
+    @derivative(of:gathering)
     func _vjpGathering<Index: TensorFlowIndex>(
         atIndices indices: Tensor<Index>,
         alongAxis axis: Int = 0
@@ -649,60 +664,69 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
 
         // We have a fast gradient implementation for the case when `posAxis == 0`.
         if posAxis == 0 {
-            return (result, { [shape = shapeTensor] v in
-                let indicesCount = indices.scalarCountTensor.rankLifted()
-                let valuesShape = Tensor<Int32>(concatenating: [indicesCount, shape[1...]])
-                let values = v.reshaped(toShape: valuesShape)
-                let valueIndices = indices.reshaped(toShape: indicesCount)
-                return _Raw.unsortedSegmentSum(
-                    data: values,
-                    segmentIds: valueIndices,
-                    numSegments: shape[0])
-            })
+            return (
+                result,
+                { [shape = shapeTensor] v in
+                    let indicesCount = indices.scalarCountTensor.rankLifted()
+                    let valuesShape = Tensor<Int32>(concatenating: [indicesCount, shape[1...]])
+                    let values = v.reshaped(toShape: valuesShape)
+                    let valueIndices = indices.reshaped(toShape: indicesCount)
+                    return _Raw.unsortedSegmentSum(
+                        data: values,
+                        segmentIds: valueIndices,
+                        numSegments: shape[0])
+                }
+            )
         }
 
-        return (result, { [shape = shapeTensor] v in
-            let indicesSize = Tensor<Int32>(Int32(indices.scalarCount)).rankLifted()
-            let outerShape = shape[..<posAxis]
-            let outerSize = outerShape.scalarCount
-            let innerShape = shape[(posAxis + 1)...]
-            let innerSize = innerShape.scalarCount
-            let outerIndices = Tensor<Int32>(rangeFrom: 0, to: Int32(outerSize), stride: 1)
-            let innerIndices = Tensor<Int32>(
-                rangeFrom: Int32(outerSize) + 1,
-                to: Int32(outerSize) + 1 + Int32(innerSize),
-                stride: 1)
-            let valuesShape = Tensor<Int32>(concatenating: [outerShape, indicesSize, innerShape])
-            let values = v.reshaped(toShape: valuesShape)
-            let valueIndices = indices.reshaped(toShape: indicesSize)
+        return (
+            result,
+            { [shape = shapeTensor] v in
+                let indicesSize = Tensor<Int32>(Int32(indices.scalarCount)).rankLifted()
+                let outerShape = shape[..<posAxis]
+                let outerSize = outerShape.scalarCount
+                let innerShape = shape[(posAxis + 1)...]
+                let innerSize = innerShape.scalarCount
+                let outerIndices = Tensor<Int32>(rangeFrom: 0, to: Int32(outerSize), stride: 1)
+                let innerIndices = Tensor<Int32>(
+                    rangeFrom: Int32(outerSize) + 1,
+                    to: Int32(outerSize) + 1 + Int32(innerSize),
+                    stride: 1)
+                let valuesShape = Tensor<Int32>(concatenating: [outerShape, indicesSize, innerShape]
+                )
+                let values = v.reshaped(toShape: valuesShape)
+                let valueIndices = indices.reshaped(toShape: indicesSize)
 
-            // We need to sum up every slice `values[..., i, ....]` corresponding to
-            // `tensor[..., indices[i], ...]`. Since `unsortedSegmentSum` does not support an axis
-            // parameter, we transpose the gather dimension to the front, then use
-            // `unsortedSegmentSum` to build a `[gatherAxis, outerAxes, innerAxes]` tensor with all
-            // the gradients affecting each index in `gatherAxis` summed up.
-            let permutations = Tensor<Int32>(concatenating: [
-                Tensor<Int32>([Int32(outerSize)]),
-                outerIndices,
-                innerIndices])
-            let transposedValues = values.transposed(permutation: permutations)
-            let gradient = _Raw.unsortedSegmentSum(
-                data: transposedValues,
-                segmentIds: valueIndices,
-                numSegments: shape[posAxis])
+                // We need to sum up every slice `values[..., i, ....]` corresponding to
+                // `tensor[..., indices[i], ...]`. Since `unsortedSegmentSum` does not support an axis
+                // parameter, we transpose the gather dimension to the front, then use
+                // `unsortedSegmentSum` to build a `[gatherAxis, outerAxes, innerAxes]` tensor with all
+                // the gradients affecting each index in `gatherAxis` summed up.
+                let permutations = Tensor<Int32>(concatenating: [
+                    Tensor<Int32>([Int32(outerSize)]),
+                    outerIndices,
+                    innerIndices
+                ])
+                let transposedValues = values.transposed(permutation: permutations)
+                let gradient = _Raw.unsortedSegmentSum(
+                    data: transposedValues,
+                    segmentIds: valueIndices,
+                    numSegments: shape[posAxis])
 
-            // Finally, we invert the above transpose operation by moving dimension 0 back to its
-            // original position.
-            let inversePermutations = Tensor<Int32>(concatenating: [
-                outerIndices + 1,
-                Tensor<Int32>([0]),
-                innerIndices])
-            return gradient.transposed(permutation: inversePermutations)
-        })
+                // Finally, we invert the above transpose operation by moving dimension 0 back to its
+                // original position.
+                let inversePermutations = Tensor<Int32>(concatenating: [
+                    outerIndices + 1,
+                    Tensor<Int32>([0]),
+                    innerIndices
+                ])
+                return gradient.transposed(permutation: inversePermutations)
+            }
+        )
     }
 }
 
-public extension Tensor {
+extension Tensor {
     /// Returns the locations of non-zero / true values in this tensor.
     ///
     /// The coordinates are returned in a 2-D tensor where the first dimension (rows) represents the
@@ -732,7 +756,7 @@ public extension Tensor {
     ///
     /// - Returns: A tensor with shape `(num_true, rank(condition))`.
     @inlinable
-    func nonZeroIndices() -> Tensor<Int64> {
+    public func nonZeroIndices() -> Tensor<Int64> {
         return _Raw.where_(self)
     }
 }
@@ -744,16 +768,16 @@ public extension Tensor {
 // TODO: What about precedence? Why is this operator used for broadcasting?
 infix operator .=
 
-public extension Tensor {
+extension Tensor {
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func broadcasted(toShape shape: Tensor<Int32>) -> Tensor {
+    public func broadcasted(toShape shape: Tensor<Int32>) -> Tensor {
         return _Raw.broadcastTo(self, shape: shape)
     }
 
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func broadcasted(to shape: TensorShape) -> Tensor {
+    public func broadcasted(to shape: TensorShape) -> Tensor {
         return broadcasted(toShape: Tensor<Int32>({ shape.dimensions.map(Int32.init) }()))
     }
 
@@ -761,40 +785,43 @@ public extension Tensor {
     /// - Precondition: The specified shape must be compatible for broadcasting.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func broadcasted<OtherScalar>(like other: Tensor<OtherScalar>) -> Tensor {
+    public func broadcasted<OtherScalar>(like other: Tensor<OtherScalar>) -> Tensor {
         return broadcasted(toShape: other.shapeTensor)
     }
 
     @inlinable
-    static func .= (lhs: inout Tensor, rhs: Tensor) {
+    public static func .= (lhs: inout Tensor, rhs: Tensor) {
         lhs = rhs.broadcasted(like: lhs)
     }
 }
 
-public extension Tensor where Scalar: Numeric {
+extension Tensor where Scalar: Numeric {
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func unbroadcasted(toShape otherShape: Tensor<Int32>) -> Tensor {
+    public func unbroadcasted(toShape otherShape: Tensor<Int32>) -> Tensor {
         // TODO: Simplify this once differentiating control flow is supported.
-        return unbroadcasted(to: {
-            precondition(otherShape.rank == 1)
-            return TensorShape(otherShape.scalars.map(Int.init))
-        }())
+        return unbroadcasted(
+            to: {
+                precondition(otherShape.rank == 1)
+                return TensorShape(otherShape.scalars.map(Int.init))
+            }())
     }
 
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func unbroadcasted<OtherScalar>(like other: Tensor<OtherScalar>) -> Tensor {
+    public func unbroadcasted<OtherScalar>(like other: Tensor<OtherScalar>) -> Tensor {
         return unbroadcasted(toShape: other.shapeTensor)
     }
 
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func unbroadcasted(to shape: TensorShape) -> Tensor {
+    public func unbroadcasted(to shape: TensorShape) -> Tensor {
         let dimensions = self.shape.dimensions
         var otherDimensions = shape.dimensions
         let rankDifference = dimensions.count - otherDimensions.count
-        precondition(rankDifference >= 0, """
+        precondition(
+            rankDifference >= 0,
+            """
             The rank of 'self' must be greater than or equal to the number of \
             dimensions in the destination shape
             """)
@@ -806,7 +833,10 @@ public extension Tensor where Scalar: Numeric {
         axes.reserveCapacity(dimensions.count)
         for (i, (dim, otherDim)) in zip(dimensions, otherDimensions).enumerated() {
             if dim == otherDim { continue }
-            if otherDim == 1 { axes.append(i); continue }
+            if otherDim == 1 {
+                axes.append(i)
+                continue
+            }
             preconditionFailure("Cannot unbroadcast \(self.shape) to \(shape)")
         }
         return sum(alongAxes: axes).reshaped(to: shape)
@@ -815,23 +845,29 @@ public extension Tensor where Scalar: Numeric {
 
 extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: broadcasted)
+    @derivative(of:broadcasted)
     func _vjpBroadcasted(toShape shape: Tensor<Int32>) -> (
         value: Tensor, pullback: (Tensor) -> Tensor
     ) {
-        return (broadcasted(toShape: shape), { [originalShape = shapeTensor] v in
-            v.unbroadcasted(toShape: originalShape)
-        })
+        return (
+            broadcasted(toShape: shape),
+            { [originalShape = shapeTensor] v in
+                v.unbroadcasted(toShape: originalShape)
+            }
+        )
     }
 
     @inlinable
-    @derivative(of: unbroadcasted)
+    @derivative(of:unbroadcasted)
     func _vjpUnbroadcasted(to shape: TensorShape) -> (
         value: Tensor, pullback: (Tensor) -> Tensor
     ) {
-        return (unbroadcasted(to: shape), { [originalShape = shapeTensor] v in
-            v.broadcasted(toShape: originalShape)
-        })
+        return (
+            unbroadcasted(to: shape),
+            { [originalShape = shapeTensor] v in
+                v.broadcasted(toShape: originalShape)
+            }
+        )
     }
 }
 
@@ -839,13 +875,15 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
 // Padding
 //===------------------------------------------------------------------------------------------===//
 
-public extension Tensor where Scalar: Numeric {
+extension Tensor where Scalar: Numeric {
     /// A mode that dictates how a tensor is padded.
-    enum PaddingMode {
+    public enum PaddingMode {
         /// Pads with constant value.
         case constant(Scalar)
+
         /// Mirrors values along padding dimensions, excluding the edge value.
         case reflect
+
         /// Mirrors values along padding dimensions, including the edge value.
         case symmetric
     }
@@ -853,14 +891,16 @@ public extension Tensor where Scalar: Numeric {
     /// Returns a tensor padded with constant according to the specified padding sizes.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func padded(forSizes sizes: [(before: Int, after: Int)], with value: Scalar = 0) -> Tensor {
+    public func padded(forSizes sizes: [(before: Int, after: Int)], with value: Scalar = 0)
+        -> Tensor
+    {
         padded(forSizes: sizes, mode: .constant(value))
     }
 
     /// Returns a padded tensor according to the specified padding sizes and mode.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func padded(forSizes sizes: [(before: Int, after: Int)], mode: PaddingMode) -> Tensor {
+    public func padded(forSizes sizes: [(before: Int, after: Int)], mode: PaddingMode) -> Tensor {
         let paddings = Tensor<Int32>(
             shape: [sizes.count, 2],
             scalars: sizes.flatMap { [Int32($0.before), Int32($0.after)] })
@@ -875,32 +915,35 @@ public extension Tensor where Scalar: Numeric {
     }
 }
 
-internal extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: padded)
+    @derivative(of:padded)
     func _vjpPadded(
         forSizes sizes: [(before: Int, after: Int)],
         mode: PaddingMode
     ) -> (value: Tensor, pullback: (Tensor) -> Tensor) {
         let result = padded(forSizes: sizes, mode: mode)
-        return (result, { [rank = rankTensor, shape = shapeTensor] v in
-            let paddings = Tensor<Int32>(
-                shape: [sizes.count, 2],
-                scalars: sizes.flatMap { [Int32($0.before), Int32($0.after)] })
-            switch mode {
-            case .constant:
-                let padBefore = _Raw.slice(
-                    paddings,
-                    begin: Tensor<Int32>([0, 0]),
-                    size: Tensor<Int32>(stacking: [rank, Tensor<Int32>(1)]))
-                let begin = padBefore.reshaped(to: [-1])
-                return v.slice(lowerBounds: begin, sizes: shape)
-            case .reflect:
-                return _Raw.mirrorPadGrad(v, paddings: paddings, mode: .reflect)
-            case .symmetric:
-                return _Raw.mirrorPadGrad(v, paddings: paddings, mode: .symmetric)
+        return (
+            result,
+            { [rank = rankTensor, shape = shapeTensor] v in
+                let paddings = Tensor<Int32>(
+                    shape: [sizes.count, 2],
+                    scalars: sizes.flatMap { [Int32($0.before), Int32($0.after)] })
+                switch mode {
+                case .constant:
+                    let padBefore = _Raw.slice(
+                        paddings,
+                        begin: Tensor<Int32>([0, 0]),
+                        size: Tensor<Int32>(stacking: [rank, Tensor<Int32>(1)]))
+                    let begin = padBefore.reshaped(to: [-1])
+                    return v.slice(lowerBounds: begin, sizes: shape)
+                case .reflect:
+                    return _Raw.mirrorPadGrad(v, paddings: paddings, mode: .reflect)
+                case .symmetric:
+                    return _Raw.mirrorPadGrad(v, paddings: paddings, mode: .symmetric)
+                }
             }
-        })
+        )
     }
 }
 
@@ -910,7 +953,7 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
 
 // TODO: Negative indexing and strides syntax.
 
-public extension Tensor {
+extension Tensor {
     /// Extracts a slice from the tensor defined by lower and upper bounds for
     /// each dimension.
     ///
@@ -918,38 +961,41 @@ public extension Tensor {
     /// - Parameter upperBounds: The upper bounds at each dimension.
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func slice(lowerBounds: [Int], upperBounds: [Int]) -> Tensor {
+    public func slice(lowerBounds: [Int], upperBounds: [Int]) -> Tensor {
         // TODO: Precondition `lowerBounds.count == upperBounds.count`,
         // preferably in graph.
         // TODO: Differentiating control flow is not supported yet, thus the thunks.
-        let lowerBoundsTensor = Tensor<Int32>({lowerBounds.map(Int32.init)}())
-        let upperBoundsTensor = Tensor<Int32>({upperBounds.map(Int32.init)}())
+        let lowerBoundsTensor = Tensor<Int32>({ lowerBounds.map(Int32.init) }())
+        let upperBoundsTensor = Tensor<Int32>({ upperBounds.map(Int32.init) }())
         return slice(lowerBounds: lowerBoundsTensor, sizes: upperBoundsTensor - lowerBoundsTensor)
     }
 
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    func slice(lowerBounds: Tensor<Int32>, sizes: Tensor<Int32>) -> Tensor {
+    public func slice(lowerBounds: Tensor<Int32>, sizes: Tensor<Int32>) -> Tensor {
         return _Raw.slice(self, begin: lowerBounds, size: sizes)
     }
 }
 
-public extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: slice)
+    @derivative(of:slice)
     internal func _vjpSlice(
         lowerBounds: Tensor<Int32>,
         sizes: Tensor<Int32>
     ) -> (value: Tensor, pullback: (Tensor) -> Tensor) {
         let value = slice(lowerBounds: lowerBounds, sizes: sizes)
         let afterPaddings = shapeTensor - value.shapeTensor - lowerBounds
-        return (value, { [after = afterPaddings] v in
-            let beforePaddings = lowerBounds.expandingShape(at: 1)
-            let afterPaddings = after.expandingShape(at: 1)
-            let paddings = Tensor<Int32>(
-                concatenating: [beforePaddings, afterPaddings], alongAxis: 1)
-            return _Raw.pad(v, paddings: paddings)
-        })
+        return (
+            value,
+            { [after = afterPaddings] v in
+                let beforePaddings = lowerBounds.expandingShape(at: 1)
+                let afterPaddings = after.expandingShape(at: 1)
+                let paddings = Tensor<Int32>(
+                    concatenating: [beforePaddings, afterPaddings], alongAxis: 1)
+                return _Raw.pad(v, paddings: paddings)
+            }
+        )
     }
 }
 
@@ -971,8 +1017,8 @@ extension TensorRange: Equatable {
     public static func == (lhs: TensorRange, rhs: TensorRange) -> Bool {
         switch (lhs, rhs) {
         case (.ellipsis, .ellipsis),
-             (.newAxis, .newAxis),
-             (.squeezeAxis, .squeezeAxis):
+            (.newAxis, .newAxis),
+            (.squeezeAxis, .squeezeAxis):
             return true
         case (let .index(i1), let .index(i2)): return i1 == i2
         case (let .range(r1, s1), let .range(r2, s2)): return r1 == r2 && s1 == s2
@@ -1039,37 +1085,37 @@ precedencegroup StridedRangeFormationPrecedence {
     lowerThan: RangeFormationPrecedence
 }
 
-public extension Range where Bound == Int {
-    static func .. (range: Range, stride: Int) -> TensorRange {
+extension Range where Bound == Int {
+    public static func .. (range: Range, stride: Int) -> TensorRange {
         return .range(range, stride: stride)
     }
 }
 
-public extension ClosedRange where Bound == Int {
-    static func .. (range: ClosedRange, stride: Int) -> TensorRange {
+extension ClosedRange where Bound == Int {
+    public static func .. (range: ClosedRange, stride: Int) -> TensorRange {
         return .closedRange(range, stride: stride)
     }
 }
 
-public extension PartialRangeFrom where Bound == Int {
-    static func .. (range: PartialRangeFrom, stride: Int) -> TensorRange {
+extension PartialRangeFrom where Bound == Int {
+    public static func .. (range: PartialRangeFrom, stride: Int) -> TensorRange {
         return .partialRangeFrom(range, stride: stride)
     }
 }
 
-public extension PartialRangeUpTo where Bound == Int {
-    static func .. (range: PartialRangeUpTo, stride: Int) -> TensorRange {
+extension PartialRangeUpTo where Bound == Int {
+    public static func .. (range: PartialRangeUpTo, stride: Int) -> TensorRange {
         return .partialRangeUpTo(range, stride: stride)
     }
 }
 
-public extension PartialRangeThrough where Bound == Int {
-    static func .. (range: PartialRangeThrough, stride: Int) -> TensorRange {
+extension PartialRangeThrough where Bound == Int {
+    public static func .. (range: PartialRangeThrough, stride: Int) -> TensorRange {
         return .partialRangeThrough(range, stride: stride)
     }
 }
 
-public extension Tensor {
+extension Tensor {
     @frozen @usableFromInline
     internal struct IndexPath {
         @usableFromInline
@@ -1096,7 +1142,7 @@ public extension Tensor {
     }
 
     @inlinable
-    @differentiable(wrt: self where Scalar : TensorFlowFloatingPoint)
+    @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
     internal subscript(_ indexPath: IndexPath) -> Tensor {
         get {
             return _Raw.stridedSlice(
@@ -1119,39 +1165,43 @@ public extension Tensor {
 
     @inlinable
     @differentiable(wrt: self where Scalar: TensorFlowFloatingPoint)
-    subscript(_ ranges: TensorRangeExpression...) -> Tensor {
+    public subscript(_ ranges: TensorRangeExpression...) -> Tensor {
         get {
-            return self[{IndexPath({ranges.map { $0.tensorRange }}())}()]
+            return self[{ IndexPath({ ranges.map { $0.tensorRange } }()) }()]
         }
         set {
-            self[{IndexPath({ranges.map { $0.tensorRange }}())}()] = newValue
+            self[{ IndexPath({ ranges.map { $0.tensorRange } }()) }()] = newValue
         }
     }
 }
 
-public extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     @usableFromInline
-    @derivative(of: subscript)
+    @derivative(of:subscript)
     internal func _vjpSubscript(
         _ indexPath: IndexPath
     ) -> (value: Tensor, pullback: (Tensor) -> Tensor) {
-        return (self[indexPath], { [shape = shapeTensor] v in
-            _Raw.stridedSliceGrad(
-                shape: shape, begin: indexPath.begin, end: indexPath.end,
-                strides: indexPath.strides, dy: v, beginMask: indexPath.beginMask,
-                endMask: indexPath.endMask, ellipsisMask: indexPath.ellipsisMask,
-                newAxisMask: indexPath.newAxisMask,
-                shrinkAxisMask: indexPath.squeezeAxisMask)
-        })
+        return (
+            self[indexPath],
+            { [shape = shapeTensor] v in
+                _Raw.stridedSliceGrad(
+                    shape: shape, begin: indexPath.begin, end: indexPath.end,
+                    strides: indexPath.strides, dy: v, beginMask: indexPath.beginMask,
+                    endMask: indexPath.endMask, ellipsisMask: indexPath.ellipsisMask,
+                    newAxisMask: indexPath.newAxisMask,
+                    shrinkAxisMask: indexPath.squeezeAxisMask)
+            }
+        )
     }
 }
 
-internal extension Tensor.IndexPath {
+extension Tensor.IndexPath {
     @inlinable
     init(_ ranges: [TensorRange]) {
         precondition(!ranges.isEmpty, "The tensor range collection cannot be empty.")
-        precondition(ranges.lazy.filter { $0 == TensorRange.ellipsis }.count < 2,
-                     "Only one ellipsis is allowed per tensor range collection.")
+        precondition(
+            ranges.lazy.filter { $0 == TensorRange.ellipsis }.count < 2,
+            "Only one ellipsis is allowed per tensor range collection.")
 
         var begin = [Int32](repeating: 0, count: ranges.count)
         var end = [Int32](repeating: 0, count: ranges.count)

@@ -17,20 +17,28 @@
 /// An optimizer that implements stochastic gradient descent, with support for momentum, learning
 /// rate decay, and Nesterov momentum.
 public class SGD<Model: Differentiable>: Optimizer
-    where Model.TangentVector: VectorProtocol & ElementaryFunctions,
-          Model.TangentVector.VectorSpaceScalar == Float {
+where
+    Model.TangentVector: VectorProtocol & ElementaryFunctions,
+    Model.TangentVector.VectorSpaceScalar == Float
+{
     public typealias Model = Model
+
     /// The learning rate.
     public var learningRate: Float
+
     /// The momentum factor. It accelerates stochastic gradient descent in the relevant direction
     /// and dampens oscillations.
     public var momentum: Float
+
     /// The weight decay.
     public var decay: Float
+
     /// Use Nesterov momentum if true.
     public var nesterov: Bool
+
     /// The velocity state of the model.
     public var velocity: Model.TangentVector = .zero
+
     /// The set of steps taken.
     public var step: Int = 0
 

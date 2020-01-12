@@ -7,7 +7,7 @@ class LazyTensorOperationsTracker {
         let liveRefCount: Int
         let allRefCount: Int
     }
-    
+
     private var refCounts: [ObjectIdentifier: RefCounts] = [:]
 
     func incrementRefCount(_ op: LazyTensorOperation, isLive: Bool) {
@@ -47,7 +47,7 @@ class LazyTensorOperationsTracker {
 
     func forEachLiveOperation(
         _ perform: (LazyTensorOperation) throws -> Void
-    ) rethrows -> Void {
+    ) rethrows {
         for (_, counts) in refCounts where counts.liveRefCount > 0 {
             try perform(counts.op)
         }
@@ -55,7 +55,7 @@ class LazyTensorOperationsTracker {
 
     func forEachOperation(
         _ perform: (LazyTensorOperation) throws -> Void
-    ) rethrows -> Void {
+    ) rethrows {
         for (_, counts) in refCounts { try perform(counts.op) }
     }
 }
@@ -63,6 +63,7 @@ class LazyTensorOperationsTracker {
 struct LazyTensorContext {
     var operationsTracker = LazyTensorOperationsTracker()
     var isShapeTrackingEnabled = true
+
     /// Should constants in trace be heuristically promoted to inputs automatically?
     /// (See `LazyTensorTraceCache`)
     var shouldPromoteConstants = true

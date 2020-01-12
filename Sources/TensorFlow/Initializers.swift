@@ -13,10 +13,10 @@
 // limitations under the License.
 
 #if !COMPILING_TENSORFLOW_STDLIB_MODULE
-import Tensor
+    import Tensor
 #endif
 
-public extension Tensor {
+extension Tensor {
     /// Creates a tensor with the specified shape and a single, repeated scalar value.
     ///
     /// - Parameters:
@@ -24,7 +24,7 @@ public extension Tensor {
     ///   - repeatedValue: The scalar value to repeat.
     @inlinable
     @available(*, deprecated, renamed: "init(repeating:shape:)")
-    init(shape: TensorShape, repeating repeatedValue: Scalar) {
+    public init(shape: TensorShape, repeating repeatedValue: Scalar) {
         self.init(repeating: repeatedValue, shape: shape)
     }
 
@@ -35,7 +35,7 @@ public extension Tensor {
     ///   - shape: The dimensions of the tensor.
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    init(repeating repeatedValue: Scalar, shape: TensorShape) {
+    public init(repeating repeatedValue: Scalar, shape: TensorShape) {
         self = _Raw.fill(
             dims: Tensor<Int32>(shape.dimensions.map(Int32.init)),
             value: Tensor(repeatedValue))
@@ -45,7 +45,7 @@ public extension Tensor {
     /// all dimensions being 1.
     @inlinable
     // @differentiable(where Scalar: TensorFlowFloatingPoint)
-    init(broadcasting scalar: Scalar, rank: Int) {
+    public init(broadcasting scalar: Scalar, rank: Int) {
         self = Tensor(scalar).reshaped(to: TensorShape(repeating: 1, count: rank))
     }
 
@@ -58,16 +58,19 @@ public extension Tensor {
     }
 }
 
-internal extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: init(repeating:shape:))
+    @derivative(of:init(repeating:shape:))
     static func _vjpInit(
         repeating repeatedValue: __owned Scalar,
         shape: __owned TensorShape
     ) -> (value: Tensor, pullback: (Tensor) -> Scalar) {
-        return (Tensor(repeating: repeatedValue, shape: shape), {
-            $0.sum().scalarized()
-        })
+        return (
+            Tensor(repeating: repeatedValue, shape: shape),
+            {
+                $0.sum().scalarized()
+            }
+        )
     }
 }
 
@@ -75,24 +78,24 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
 // Casting
 //===------------------------------------------------------------------------------------------===//
 
-public extension Tensor where Scalar: Numeric {
+extension Tensor where Scalar: Numeric {
     /// Perform an element-wise type conversion from a `Bool` tensor.
     @inlinable
-    init(_ other: Tensor<Bool>) {
+    public init(_ other: Tensor<Bool>) {
         self = _Raw.cast(other)
     }
 
     /// Perform an element-wise conversion from another `Tensor`.
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint, OtherScalar: TensorFlowFloatingPoint)
-    init<OtherScalar: Numeric>(_ other: Tensor<OtherScalar>) {
+    public init<OtherScalar: Numeric>(_ other: Tensor<OtherScalar>) {
         self = _Raw.cast(other)
     }
 }
 
-internal extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: init(_:))
+    @derivative(of:init(_:))
     static func _vjpCast<OtherScalar: TensorFlowFloatingPoint>(
         _ other: __owned Tensor<OtherScalar>
     ) -> (value: Tensor, pullback: (Tensor) -> Tensor<OtherScalar>) {
@@ -104,11 +107,11 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
 // Stacking / Concatenating / Tiling
 //===------------------------------------------------------------------------------------------===//
 
-public extension Tensor {
+extension Tensor {
     /// Creates a tensor from an array of tensors (which may themselves be scalars).
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    init(_ elements: [Tensor]) {
+    public init(_ elements: [Tensor]) {
         self = _Raw.pack(elements)
     }
 
@@ -142,7 +145,7 @@ public extension Tensor {
     /// - Returns: The stacked tensor.
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    init(stacking tensors: [Tensor], alongAxis axis: Int = 0) {
+    public init(stacking tensors: [Tensor], alongAxis axis: Int = 0) {
         self = _Raw.pack(tensors, axis: Int64(axis))
     }
 
@@ -180,15 +183,15 @@ public extension Tensor {
     /// - Returns: The concatenated tensor.
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    init(concatenating tensors: [Tensor], alongAxis axis: Int = 0) {
+    public init(concatenating tensors: [Tensor], alongAxis axis: Int = 0) {
         precondition(tensors.count > 0)
         self = _Raw.concatV2(tensors, axis: Tensor<Int32>(Int32(axis)))
     }
 }
 
-internal extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: init(_:))
+    @derivative(of:init(_:))
     static func _vjpInitElements(
         _ elements: __owned [Tensor]
     ) -> (value: Tensor, pullback: (Tensor) -> Array<Tensor>.DifferentiableView) {
@@ -196,18 +199,21 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 
     @inlinable
-    @derivative(of: init(stacking:alongAxis:))
+    @derivative(of:init(stacking:alongAxis:))
     static func _vjpStacking(
         stacking tensors: __owned [Tensor],
-        alongAxis axis: __owned  Int = 0
+        alongAxis axis: __owned Int = 0
     ) -> (value: Tensor, pullback: (Tensor) -> Array<Tensor>.DifferentiableView) {
-        (Tensor(stacking: tensors, alongAxis: axis), { v in
-            Array<Tensor>.DifferentiableView(v.unstacked(alongAxis: axis))
-        })
+        (
+            Tensor(stacking: tensors, alongAxis: axis),
+            { v in
+                Array<Tensor>.DifferentiableView(v.unstacked(alongAxis: axis))
+            }
+        )
     }
 
     @inlinable
-    @derivative(of: init(concatenating:alongAxis:))
+    @derivative(of:init(concatenating:alongAxis:))
     static func _vjpConcatenating(
         concatenating tensors: __owned [Tensor],
         alongAxis axis: __owned Int = 0
@@ -215,11 +221,14 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
         let result = Tensor<Scalar>(concatenating: tensors, alongAxis: axis)
         let posAxis = axis < 0 ? axis + tensors[0].rank : axis
         let sizes = Tensor<Int32>(stacking: tensors.map { $0.shapeTensor[posAxis] })
-        return (result, { [count = tensors.count] v in
-            if count == 1 { return Array<Tensor>.DifferentiableView([v]) }
-            let splits = v.split(sizes: sizes, alongAxis: posAxis)
-            return Array<Tensor>.DifferentiableView(splits)
-        })
+        return (
+            result,
+            { [count = tensors.count] v in
+                if count == 1 { return Array<Tensor>.DifferentiableView([v]) }
+                let splits = v.split(sizes: sizes, alongAxis: posAxis)
+                return Array<Tensor>.DifferentiableView(splits)
+            }
+        )
     }
 }
 
@@ -227,12 +236,12 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
 // Numeric
 //===------------------------------------------------------------------------------------------===//
 
-public extension Tensor where Scalar: Numeric {
+extension Tensor where Scalar: Numeric {
     /// Creates a tensor with all scalars set to zero.
     ///
     /// - Parameter shape: Shape of the tensor.
     @inlinable
-    init(zeros shape: TensorShape) {
+    public init(zeros shape: TensorShape) {
         self.init(repeating: 0, shape: shape)
     }
 
@@ -240,7 +249,7 @@ public extension Tensor where Scalar: Numeric {
     ///
     /// - Parameter shape: Shape of the tensor.
     @inlinable
-    init(ones shape: TensorShape) {
+    public init(ones shape: TensorShape) {
         self.init(repeating: 1, shape: shape)
     }
 
@@ -249,7 +258,7 @@ public extension Tensor where Scalar: Numeric {
     ///
     /// - Parameter other: Tensor whose shape and data type to use.
     @inlinable
-    init(zerosLike other: Tensor) {
+    public init(zerosLike other: Tensor) {
         self = _Raw.zerosLike(other)
     }
 
@@ -258,7 +267,7 @@ public extension Tensor where Scalar: Numeric {
     ///
     /// - Parameter other: Tensor whose shape and data type to use.
     @inlinable
-    init(onesLike other: Tensor) {
+    public init(onesLike other: Tensor) {
         self = _Raw.onesLike(other)
     }
 
@@ -273,7 +282,7 @@ public extension Tensor where Scalar: Numeric {
     ///   - stride: The amount to step by with each iteration. `stride` must be
     ///     positive.
     @inlinable
-    init(rangeFrom start: Scalar, to end: Scalar, stride: Scalar) {
+    public init(rangeFrom start: Scalar, to end: Scalar, stride: Scalar) {
         self = _Raw.range(start: Tensor(start), limit: Tensor(end), delta: Tensor(stride))
     }
 
@@ -287,7 +296,7 @@ public extension Tensor where Scalar: Numeric {
     ///     sequence.
     ///   - stride: The amount to step by with each iteration. `stride` must be positive.
     @inlinable
-    init(rangeFrom start: Tensor<Scalar>, to end: Tensor<Scalar>, stride: Tensor<Scalar>) {
+    public init(rangeFrom start: Tensor<Scalar>, to end: Tensor<Scalar>, stride: Tensor<Scalar>) {
         self = _Raw.range(start: start, limit: end, delta: stride)
     }
 
@@ -319,7 +328,7 @@ public extension Tensor where Scalar: Numeric {
     ///     referred to by any index in `indices`.
     ///   - axis: The axis to fill. The default is `-1`, a new inner-most axis.
     @inlinable
-    init(
+    public init(
         oneHotAtIndices indices: Tensor<Int32>,
         depth: Int,
         onValue: Scalar = 1,
@@ -335,7 +344,7 @@ public extension Tensor where Scalar: Numeric {
     }
 }
 
-public extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// Creates a 1-D tensor representing a sequence from a starting value, up to and
     /// including an end value, spaced evenly to generate the number of values specified.
     ///
@@ -346,7 +355,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     ///     sequence.
     ///   - count: The number of values in the resulting sequence. `count` must be positive.
     @inlinable
-    init(linearSpaceFrom start: Scalar, to end: Scalar, count: Int) {
+    public init(linearSpaceFrom start: Scalar, to end: Scalar, count: Int) {
         self = _Raw.linSpace(
             start: Tensor(start), stop: Tensor(end), num: Tensor<Int32>(Int32(count)))
     }
@@ -363,7 +372,8 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     ///
     /// - Precondition: `start`, `to`, and `count` must be Tensors containing a single Scalar value.
     @inlinable
-    init(linearSpaceFrom start: Tensor<Scalar>, to end: Tensor<Scalar>, count: Tensor<Int32>) {
+    public init(linearSpaceFrom start: Tensor<Scalar>, to end: Tensor<Scalar>, count: Tensor<Int32>)
+    {
         self = _Raw.linSpace(start: start, stop: end, num: count)
     }
 }
@@ -372,7 +382,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
 // Random
 //===------------------------------------------------------------------------------------------===//
 
-public extension Tensor where Scalar: TensorFlowIndex {
+extension Tensor where Scalar: TensorFlowIndex {
     /// Creates a tensor with the specified shape, randomly sampling scalar values from a uniform 
     /// distribution between `lowerBound` and `upperBound`.
     ///
@@ -381,7 +391,7 @@ public extension Tensor where Scalar: TensorFlowIndex {
     ///   - lowerBound: The lower bound of the distribution.
     ///   - upperBound: The upper bound of the distribution.
     ///   - seed: The seed value.
-    init(
+    public init(
         randomUniform shape: TensorShape,
         lowerBound: Tensor<Scalar> = Tensor<Scalar>(0),
         upperBound: Tensor<Scalar> = Tensor<Scalar>(1),
@@ -395,7 +405,7 @@ public extension Tensor where Scalar: TensorFlowIndex {
     }
 }
 
-public extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// Creates a tensor with the specified shape, randomly sampling scalar values from a uniform 
     /// distribution between `lowerBound` and `upperBound`.
     ///
@@ -404,7 +414,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     ///   - lowerBound: The lower bound of the distribution.
     ///   - upperBound: The upper bound of the distribution.
     ///   - seed: The seed value.
-    init(
+    public init(
         randomUniform shape: TensorShape,
         lowerBound: Tensor<Scalar> = Tensor<Scalar>(0),
         upperBound: Tensor<Scalar> = Tensor<Scalar>(1),
@@ -424,7 +434,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     ///   - mean: The mean of the distribution.
     ///   - standardDeviation: The standard deviation of the distribution.
     ///   - seed: The seed value.
-    init(
+    public init(
         randomNormal shape: TensorShape,
         mean: Tensor<Scalar> = Tensor<Scalar>(0),
         standardDeviation: Tensor<Scalar> = Tensor<Scalar>(1),
@@ -444,7 +454,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     ///   - mean: The mean of the distribution.
     ///   - standardDeviation: The standard deviation of the distribution.
     ///   - seed: The seed value.
-    init(
+    public init(
         randomTruncatedNormal shape: TensorShape,
         mean: Tensor<Scalar> = Tensor<Scalar>(0),
         standardDeviation: Tensor<Scalar> = Tensor<Scalar>(1),
@@ -457,7 +467,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 }
 
-public extension Tensor where Scalar: TensorFlowIndex {
+extension Tensor where Scalar: TensorFlowIndex {
     /// Creates a tensor by drawing samples from a categorical distribution.
     ///
     /// - Parameters:
@@ -468,14 +478,14 @@ public extension Tensor where Scalar: TensorFlowIndex {
     ///
     /// - Returns: 2-D Tensor with shape `[batchSize, sampleCount]`.  Each slice `[i, :]`
     ///     contains the drawn class labels with range `[0, classCount)`.
-    init<T: TensorFlowNumeric>(
+    public init<T: TensorFlowNumeric>(
         randomCategorialLogits: Tensor<T>,
         sampleCount: Int32,
         seed: TensorFlowSeed = Context.local.randomSeed
     ) {
         self = _Raw.statelessMultinomial(
-            logits: randomCategorialLogits, 
-            numSamples: Tensor<Int32>(sampleCount), 
+            logits: randomCategorialLogits,
+            numSamples: Tensor<Int32>(sampleCount),
             seed: Tensor<Int32>([seed.graph, seed.op]))
     }
 }
@@ -484,10 +494,10 @@ public extension Tensor where Scalar: TensorFlowIndex {
 // Variance Scaling
 //===------------------------------------------------------------------------------------------===//
 
-fileprivate extension TensorShape {
+extension TensorShape {
     // Returns the `fanIn` and `fanOut` counts for `TensorShape`s where the last two axes represent
     // the input channel count and output channel count, respectively.
-    func fans() -> (in: Int, out: Int) {
+    fileprivate func fans() -> (in: Int, out: Int) {
         precondition(
             count > 1,
             "Fans cannot be computed for tensors with fewer than 2 dimensions. Got: \(count)")
@@ -507,7 +517,7 @@ fileprivate extension TensorShape {
     }
 }
 
-public extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// Creates a tensor with the specified shape by performing Glorot (Xavier) uniform initialization.
     ///
     /// It draws random samples from a uniform distribution between `-limit` and `limit`
@@ -521,7 +531,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// - Parameters:
     ///   - shape: The dimensions of the tensor.
     ///   - seed: The seed value.
-    init(glorotUniform shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed) {
+    public init(glorotUniform shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed) {
         let (fanIn, fanOut) = shape.fans()
         let limit = Tensor<Scalar>(Scalar.sqrt(6 / Scalar(fanIn + fanOut)))
         self.init(randomUniform: shape, lowerBound: -limit, upperBound: limit, seed: seed)
@@ -540,12 +550,12 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// - Parameters:
     ///   - shape: The dimensions of the tensor.
     ///   - seed: The seed value.
-    init(glorotNormal shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed) {
+    public init(glorotNormal shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed) {
         let (fanIn, fanOut) = shape.fans()
         var standardDeviation = Tensor<Scalar>(Scalar.sqrt(2 / Scalar(fanIn + fanOut)))
         // Standard deviation of truncated standard normal between `-2` and `2` standard deviations.
         let truncationDeviation = Tensor<Scalar>(0.87962566103423978)
-        standardDeviation /= truncationDeviation // Smooths the tails of the clipped normal.
+        standardDeviation /= truncationDeviation  // Smooths the tails of the clipped normal.
         self.init(
             randomTruncatedNormal: shape,
             mean: Tensor<Scalar>(0),
@@ -554,7 +564,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 }
 
-public extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// Creates a tensor with the specified shape by performing He (Kaiming) uniform initialization.
     ///
     /// It draws random samples from a uniform distribution between `-limit` and `limit`
@@ -568,7 +578,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// - Parameters:
     ///   - shape: The dimensions of the tensor.
     ///   - seed: The seed value.
-    init(heUniform shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed) {
+    public init(heUniform shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed) {
         let (fanIn, _) = shape.fans()
         let limit = Tensor<Scalar>(Scalar.sqrt(6 / Scalar(fanIn)))
         self.init(randomUniform: shape, lowerBound: -limit, upperBound: limit, seed: seed)
@@ -587,12 +597,12 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// - Parameters:
     ///   - shape: The dimensions of the tensor.
     ///   - seed: The seed value.
-    init(heNormal shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed) {
+    public init(heNormal shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed) {
         let (fanIn, _) = shape.fans()
         var standardDeviation = Tensor<Scalar>(Scalar.sqrt(2 / Scalar(fanIn)))
         // Standard deviation of truncated standard normal between `-2` and `2` standard deviations.
         let truncationDeviation = Tensor<Scalar>(0.87962566103423978)
-        standardDeviation /= truncationDeviation // Smooths the tails of the clipped normal.
+        standardDeviation /= truncationDeviation  // Smooths the tails of the clipped normal.
         self.init(
             randomTruncatedNormal: shape,
             mean: Tensor<Scalar>(0),
@@ -601,7 +611,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 }
 
-public extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// Creates a tensor with the specified shape by performing LeCun uniform initialization.
     ///
     /// It draws random samples from a uniform distribution between `-limit` and `limit`
@@ -614,7 +624,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// - Parameters:
     ///   - shape: The dimensions of the tensor.
     ///   - seed: The seed value.
-    init(leCunUniform shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed) {
+    public init(leCunUniform shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed) {
         let (fanIn, _) = shape.fans()
         let limit = Tensor<Scalar>(Scalar.sqrt(3 / Scalar(fanIn)))
         self.init(randomUniform: shape, lowerBound: -limit, upperBound: limit, seed: seed)
@@ -632,12 +642,12 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// - Parameters:
     ///   - shape: The dimensions of the tensor.
     ///   - seed: The seed value.
-    init(leCunNormal shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed) {
+    public init(leCunNormal shape: TensorShape, seed: TensorFlowSeed = Context.local.randomSeed) {
         let (fanIn, _) = shape.fans()
         var standardDeviation = Tensor<Scalar>(Scalar.sqrt(1 / Scalar(fanIn)))
         // Standard deviation of truncated standard normal between `-2` and `2` standard deviations.
         let truncationDeviation = Tensor<Scalar>(0.87962566103423978)
-        standardDeviation /= truncationDeviation // Smooths the tails of the clipped normal.
+        standardDeviation /= truncationDeviation  // Smooths the tails of the clipped normal.
         self.init(
             randomTruncatedNormal: shape,
             mean: Tensor<Scalar>(0),
@@ -646,7 +656,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 }
 
-public extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     /// Creates an orthogonal matrix or tensor. 
     ///
     /// If the shape of the tensor to initialize is two-dimensional, it is initialized with an 
@@ -662,14 +672,14 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
     ///   - shape: The shape of the tensor.
     ///   - gain: A multiplicative factor to apply to the orthogonal tensor.
     ///   - seed: A tuple of two integers to seed the random number generator.
-    init(
+    public init(
         orthogonal shape: TensorShape,
         gain: Tensor<Scalar> = Tensor<Scalar>(1),
         seed: TensorFlowSeed = Context.local.randomSeed
     ) {
         let rowCount = shape.dimensions.dropLast().reduce(1, *)
         let columnCount = shape[shape.rank - 1]
-        var flatShape: TensorShape 
+        var flatShape: TensorShape
         if rowCount < columnCount {
             flatShape = [columnCount, rowCount]
         } else {
@@ -681,7 +691,7 @@ public extension Tensor where Scalar: TensorFlowFloatingPoint {
         q *= sign(d)
         if rowCount < columnCount {
             q = q.transposed()
-        } 
-        self = q.reshaped(to: shape) * gain 
+        }
+        self = q.reshaped(to: shape) * gain
     }
 }

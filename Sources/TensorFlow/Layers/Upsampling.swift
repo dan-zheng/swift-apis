@@ -91,20 +91,23 @@ public struct UpSampling3D<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer 
         return Tensor<Scalar>(concatenating: repeated, alongAxis: axis)
     }
 
-    @derivative(of: repeatingElements)
+    @derivative(of:repeatingElements)
     private func _vjpRepeatingElements(
         _ input: Tensor<Scalar>, alongAxis axis: Int, count: Int
     ) -> (value: Tensor<Scalar>, pullback: (Tensor<Scalar>) -> (TangentVector, Tensor<Scalar>)) {
         let value = repeatingElements(input, alongAxis: axis, count: count)
-        return (value, { v in
-            let splits = _Raw.split(
-                splitDim: Tensor<Int32>(Int32(axis)),
-                value: v,
-                numSplit: Int64(input.shape[axis]))
-            let summed = splits.map { x in x.sum(alongAxes: axis) }
-            let concatenated = Tensor<Scalar>(concatenating: summed, alongAxis: axis)
-            return (.zero, concatenated)
-        })
+        return (
+            value,
+            { v in
+                let splits = _Raw.split(
+                    splitDim: Tensor<Int32>(Int32(axis)),
+                    value: v,
+                    numSplit: Int64(input.shape[axis]))
+                let summed = splits.map { x in x.sum(alongAxes: axis) }
+                let concatenated = Tensor<Scalar>(concatenating: summed, alongAxis: axis)
+                return (.zero, concatenated)
+            }
+        )
     }
 
     /// Returns the output obtained from applying the layer to the given input.

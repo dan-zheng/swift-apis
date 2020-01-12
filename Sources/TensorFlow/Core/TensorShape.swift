@@ -73,32 +73,32 @@ public struct TensorShape: ExpressibleByArrayLiteral {
     }
 }
 
-public extension TensorShape {
+extension TensorShape {
     /// The rank of the shape (i.e. the number of dimensions).
     @inlinable
-    var count: Int {
+    public var count: Int {
         return dimensions.count
     }
 
     @inlinable
-    var indices: Range<Int> {
-        return dimensions.indices.lowerBound ..< dimensions.indices.upperBound
+    public var indices: Range<Int> {
+        return dimensions.indices.lowerBound..<dimensions.indices.upperBound
     }
 
     @inlinable
-    var startIndex: Int {
+    public var startIndex: Int {
         return dimensions.startIndex
     }
 
     @inlinable
-    var endIndex: Int {
+    public var endIndex: Int {
         return dimensions.endIndex
     }
 
     /// Access the size of the i-th dimension.
     /// - Parameter index: The index of a dimension.
     @inlinable
-    subscript(index: Int) -> Int {
+    public subscript(index: Int) -> Int {
         _read { yield dimensions[index] }
         _modify { yield &dimensions[index] }
     }
@@ -106,7 +106,7 @@ public extension TensorShape {
     /// Access the size of the i-th dimension.
     /// - Parameter index: The index of a dimension.
     @inlinable
-    subscript(bounds: Range<Int>) -> TensorShape {
+    public subscript(bounds: Range<Int>) -> TensorShape {
         get { return TensorShape(dimensions[bounds]) }
         set { dimensions[bounds] = ArraySlice(newValue.dimensions) }
     }
@@ -136,6 +136,6 @@ extension TensorShape: Codable {
 
 extension TensorShape: CustomStringConvertible {
     public var description: String {
-      return dimensions.description
+        return dimensions.description
     }
 }

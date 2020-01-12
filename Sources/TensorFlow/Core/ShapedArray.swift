@@ -26,7 +26,7 @@ import Swift
 @usableFromInline
 internal class TensorBuffer<Scalar> {
     /// Cached element count of the underlying buffer.
-    let count : Int
+    let count: Int
 
     init(count: Int) { self.count = count }
 
@@ -44,12 +44,12 @@ internal class TensorBuffer<Scalar> {
 }
 
 // TensorBuffer backed by a native swift array.
-internal class ArrayTensorBuffer<Scalar> : TensorBuffer<Scalar> {
+internal class ArrayTensorBuffer<Scalar>: TensorBuffer<Scalar> {
     var array: [Scalar]
 
     init(_ array: __owned [Scalar]) {
-      self.array = array
-      super.init(count: array.count)
+        self.array = array
+        super.init(count: array.count)
     }
 
     override func withUnsafeBufferPointer<R>(
@@ -74,8 +74,10 @@ public protocol _ShapedArrayProtocol: RandomAccessCollection, MutableCollection 
 
     /// The number of dimensions of the array.
     var rank: Int { get }
+
     /// The shape of the array.
     var shape: [Int] { get }
+
     /// The total number of scalars in the array.
     var scalarCount: Int { get }
 
@@ -106,9 +108,9 @@ public protocol _ShapedArrayProtocol: RandomAccessCollection, MutableCollection 
     ) rethrows -> R
 }
 
-public extension _ShapedArrayProtocol {
+extension _ShapedArrayProtocol {
     /// The scalars of the array in row-major order.
-    var scalars: [Scalar] {
+    public var scalars: [Scalar] {
         get {
             return withUnsafeBufferPointer(Array.init)
         }
@@ -121,12 +123,12 @@ public extension _ShapedArrayProtocol {
     }
 
     /// Returns `true` if the array has rank 0.
-    var isScalar: Bool {
+    public var isScalar: Bool {
         return rank == 0
     }
 
     /// Returns the single scalar element if the array has rank 0 and `nil` otherwise.
-    var scalar: Scalar? {
+    public var scalar: Scalar? {
         get {
             guard rank == 0 else { return nil }
             return scalars.first
@@ -141,23 +143,23 @@ public extension _ShapedArrayProtocol {
     }
 }
 
-public extension _ShapedArrayProtocol where Scalar: Equatable {
-    static func == <Other>(lhs: Self, rhs: Other) -> Bool
-        where Other: _ShapedArrayProtocol, Scalar == Other.Scalar {
+extension _ShapedArrayProtocol where Scalar: Equatable {
+    public static func == <Other>(lhs: Self, rhs: Other) -> Bool
+    where Other: _ShapedArrayProtocol, Scalar == Other.Scalar {
         return lhs.shape == rhs.shape && lhs.scalars.elementsEqual(rhs.scalars)
     }
 }
 
-public extension _ShapedArrayProtocol {
+extension _ShapedArrayProtocol {
     /// Returns the number of element arrays in an array (equivalent to the first dimension).
     /// - Note: `count` is distinct from `scalarCount`, which represents the
     ///   total number of scalars.
-    var count: Int {
+    public var count: Int {
         return shape.first ?? 0
     }
 }
 
-internal extension _ShapedArrayProtocol {
+extension _ShapedArrayProtocol {
     /// Returns the scalar count for an element of the array.
     var scalarCountPerElement: Int {
         return shape.isEmpty ? 0 : shape.dropFirst().reduce(1, *)
@@ -170,29 +172,29 @@ internal extension _ShapedArrayProtocol {
 
     /// Returns the range of scalars corresponding to a range in the leading dimension of the array.
     func scalarSubrange(from arraySubrange: Range<Int>) -> Range<Int> {
-        return scalarIndex(fromIndex: arraySubrange.lowerBound)
-            ..< scalarIndex(fromIndex: arraySubrange.upperBound)
+        return scalarIndex(
+            fromIndex: arraySubrange.lowerBound)..<scalarIndex(fromIndex: arraySubrange.upperBound)
     }
 }
 
-fileprivate extension String {
+extension String {
     /// Returns a string of the specified length, padded with whitespace to the left.
-    func leftPadded(toLength length: Int) -> String {
+    fileprivate func leftPadded(toLength length: Int) -> String {
         return repeatElement(" ", count: max(0, length - count)) + self
     }
 }
 
 // Common public protocol implementations.
 
-fileprivate extension _ShapedArrayProtocol
-    where Element: _ShapedArrayProtocol, Element == Element.Element {
+extension _ShapedArrayProtocol
+where Element: _ShapedArrayProtocol, Element == Element.Element {
     /// Returns the whitespace separator between elements, given the current indent level.
-    func separator(indentLevel: Int) -> String {
+    fileprivate func separator(indentLevel: Int) -> String {
         if rank == 1 {
             return ", "
         }
-        return String(repeating: "\n", count: rank - 1) +
-            String(repeating: " ", count: indentLevel + 1)
+        return String(repeating: "\n", count: rank - 1)
+            + String(repeating: " ", count: indentLevel + 1)
     }
 
     /// A textual representation of the 1-D shaped array, starting at the given indent level.
@@ -209,7 +211,7 @@ fileprivate extension _ShapedArrayProtocol
     ///     printing 1-D vectors.
     ///   - summarizing: If true, summarize description if element count exceeds twice
     ///     `edgeElementCount`.
-    func vectorDescription(
+    fileprivate func vectorDescription(
         indentLevel: Int,
         edgeElementCount: Int,
         maxScalarLength: Int,
@@ -266,7 +268,7 @@ fileprivate extension _ShapedArrayProtocol
     ///     printing 1-D vectors.
     ///   - summarizing: If true, summarizing description if element count exceeds twice
     ///     `edgeElementCount`.
-    func description(
+    fileprivate func description(
         indentLevel: Int,
         edgeElementCount: Int,
         maxScalarLength: Int,
@@ -308,9 +310,9 @@ fileprivate extension _ShapedArrayProtocol
         }
 
         // Return lines joined with separators.
-        let lineSeparator = "," +
-            String(repeating: "\n", count: rank - 1) +
-            String(repeating: " ", count: indentLevel + 1)
+        let lineSeparator =
+            "," + String(repeating: "\n", count: rank - 1)
+            + String(repeating: " ", count: indentLevel + 1)
         return elementDescriptions.enumerated().reduce(into: "[") { result, entry in
             let (i, elementDescription) = entry
             result += elementDescription
@@ -319,8 +321,8 @@ fileprivate extension _ShapedArrayProtocol
     }
 }
 
-public extension _ShapedArrayProtocol
-    where Element: _ShapedArrayProtocol, Element == Element.Element {
+extension _ShapedArrayProtocol
+where Element: _ShapedArrayProtocol, Element == Element.Element {
     /// A textual representation of the shaped array. Returns a summarized description if
     /// `summarizing` is true and the element count exceeds twice the `edgeElementCount`.
     ///
@@ -331,7 +333,7 @@ public extension _ShapedArrayProtocol
     ///     via ellipses (`...`).
     ///   - summarizing: If true, summarizing description if element count exceeds twice
     ///     `edgeElementCount`.
-    func description(
+    public func description(
         lineWidth: Int = 80,
         edgeElementCount: Int = 3,
         summarizing: Bool = false
@@ -348,7 +350,7 @@ public extension _ShapedArrayProtocol
     }
 
     /// A full, non-pretty-printed textual representation of the shaped array, showing all scalars.
-    var fullDescription: String {
+    public var fullDescription: String {
         if let scalar = scalar {
             return String(describing: scalar)
         }
@@ -381,8 +383,8 @@ public struct ShapedArray<Scalar>: _ShapedArrayProtocol {
     }
 }
 
-fileprivate extension ShapedArray {
-    mutating func ensureUniquelyReferenced() {
+extension ShapedArray {
+    fileprivate mutating func ensureUniquelyReferenced() {
         if isKnownUniquelyReferenced(&buffer) { return }
         let oldBuffer = buffer
         debugLog("Unique reference check")
@@ -392,26 +394,26 @@ fileprivate extension ShapedArray {
     }
 }
 
-public extension ShapedArray {
+extension ShapedArray {
     /// The number of dimensions of the array.
-    var rank: Int {
+    public var rank: Int {
         return shape.count
     }
 
     /// The total number of scalars in the array.
-    var scalarCount: Int {
+    public var scalarCount: Int {
         return buffer.count
     }
 
     /// Creates a `ShapedArray` with the same shape and scalars as the specified instance.
-    init(_ other: ShapedArray) {
+    public init(_ other: ShapedArray) {
         debugLog("Initializing from another ShapedArray.")
         self.init(buffer: other.buffer, shape: other.shape)
     }
 
     /// Creates a `ShapedArray` with the specified shape and contiguous scalars in row-major order.
     /// - Precondition: The number of scalars must equal the product of the dimensions of the shape.
-    init(shape: __owned [Int], scalars: __owned [Scalar]) {
+    public init(shape: __owned [Int], scalars: __owned [Scalar]) {
         precondition(shape.reduce(1, *) == scalars.count, "Scalar count mismatch.")
         let buffer = ArrayTensorBuffer<Scalar>(scalars)
         self.init(buffer: buffer, shape: shape)
@@ -419,7 +421,7 @@ public extension ShapedArray {
 
     /// Creates a `ShapedArray` with the specified shape and sequence of scalars in row-major order.
     /// - Precondition: The number of scalars must equal the product of the dimensions of the shape.
-    init<S: Sequence>(shape: __owned [Int], scalars: __shared S) where S.Element == Scalar {
+    public init<S: Sequence>(shape: __owned [Int], scalars: __shared S) where S.Element == Scalar {
         let scalarCount = shape.reduce(1, *)
         let buffer = ArrayTensorBuffer<Scalar>([Scalar](scalars))
         precondition(
@@ -429,7 +431,7 @@ public extension ShapedArray {
     }
 
     /// Creates a `ShapedArray` from a scalar value.
-    init(_ scalar: __owned Scalar) {
+    public init(_ scalar: __owned Scalar) {
         self.init(buffer: ArrayTensorBuffer([scalar]), shape: [])
     }
 
@@ -439,7 +441,7 @@ public extension ShapedArray {
     ///   - repeatedValue: The scalar value to repeat.
     @inlinable
     @available(*, deprecated, renamed: "init(repeating:shape:)")
-    init(shape: __owned [Int], repeating repeatedValue: __owned Scalar) {
+    public init(shape: __owned [Int], repeating repeatedValue: __owned Scalar) {
         self.init(repeating: repeatedValue, shape: shape)
     }
 
@@ -447,7 +449,7 @@ public extension ShapedArray {
     /// - Parameters:
     ///   - repeatedValue: The scalar value to repeat.
     ///   - shape: The shape of the `ShapedArray`.
-    init(repeating repeatedValue: __owned Scalar, shape: __owned [Int]) {
+    public init(repeating repeatedValue: __owned Scalar, shape: __owned [Int]) {
         let scalarCount = shape.reduce(1, *)
         let buffer = ArrayTensorBuffer<Scalar>(Array(repeating: repeatedValue, count: scalarCount))
         self.init(buffer: buffer, shape: shape)
@@ -501,8 +503,8 @@ extension ShapedArray: RandomAccessCollection, MutableCollection {
         get {
             precondition(!isScalar, "Scalar has no elements and cannot be subscripted.")
             precondition(
-                bounds.lowerBound >= startIndex && bounds.lowerBound <= endIndex &&
-                bounds.upperBound >= startIndex && bounds.upperBound <= endIndex,
+                bounds.lowerBound >= startIndex && bounds.lowerBound <= endIndex
+                    && bounds.upperBound >= startIndex && bounds.upperBound <= endIndex,
                 "ShapedArray indices are out of range")
             return ShapedArraySlice(base: self, bounds: bounds)
         }
@@ -524,14 +526,14 @@ extension ShapedArray: RandomAccessCollection, MutableCollection {
     }
 }
 
-public extension ShapedArray {
+extension ShapedArray {
     /// Calls a closure with a pointer to the array’s contiguous storage.
     /// - Parameter body: A closure with an `UnsafeBufferPointer` parameter that points to the
     ///   contiguous storage for the array. If no such storage exists, it is created. If body has a
     ///   return value, that value is also used as the return value for the
     ///   `withUnsafeBufferPointer(_:)` method. The pointer argument is valid only for the duration
     ///   of the method's execution.
-    func withUnsafeBufferPointer<Result>(
+    public func withUnsafeBufferPointer<Result>(
         _ body: (UnsafeBufferPointer<Scalar>) throws -> Result
     ) rethrows -> Result {
         return try buffer.withUnsafeBufferPointer { ptr in try body(ptr) }
@@ -543,7 +545,7 @@ public extension ShapedArray {
     ///   has a return value, that value is also used as the return value for the
     ///   `withUnsafeMutableBufferPointer(_:)` method. The pointer argument is valid only for the
     ///   duration of the method's execution.
-    mutating func withUnsafeMutableBufferPointer<Result>(
+    public mutating func withUnsafeMutableBufferPointer<Result>(
         _ body: (inout UnsafeMutableBufferPointer<Scalar>) throws -> Result
     ) rethrows -> Result {
         ensureUniquelyReferenced()
@@ -554,6 +556,7 @@ public extension ShapedArray {
 // Array literal conversion.
 extension ShapedArray: ExpressibleByArrayLiteral where Scalar: TensorFlowScalar {
     public typealias ArrayLiteralElement = _TensorElementLiteral<Scalar>
+
     @inlinable
     public init(arrayLiteral elements: _TensorElementLiteral<Scalar>...) {
         precondition(!elements.isEmpty, "Cannot create a 'ShapedArray' with no elements.")
@@ -677,8 +680,10 @@ extension ShapedArray: Codable where Scalar: Codable {
 public struct ShapedArraySlice<Scalar>: _ShapedArrayProtocol {
     /// The underlying `ShapedArray` of the slice.
     @usableFromInline internal var base: ShapedArray<Scalar>
+
     /// The subdimensional indices of a slice.
     @usableFromInline internal var baseIndices: [Int]
+
     /// The subarray bounds of a slice.
     @usableFromInline internal var bounds: Range<Int>?
 
@@ -700,19 +705,19 @@ public struct ShapedArraySlice<Scalar>: _ShapedArrayProtocol {
     }
 }
 
-public extension ShapedArraySlice {
+extension ShapedArraySlice {
     /// Indexing depth of this slice, i.e. the difference in rank between the base and the slice.
     internal var indexingDepth: Int {
         return baseIndices.count
     }
 
     /// The number of dimensions of the array.
-    var rank: Int {
+    public var rank: Int {
         return base.rank - indexingDepth
     }
 
     /// The shape of the array.
-    var shape: [Int] {
+    public var shape: [Int] {
         if let bounds = bounds {
             return [bounds.count] + Array(base.shape.dropFirst(indexingDepth + 1))
         }
@@ -720,29 +725,29 @@ public extension ShapedArraySlice {
     }
 
     /// The total number of scalars in the array.
-    var scalarCount: Int {
+    public var scalarCount: Int {
         return shape.reduce(1, *)
     }
 }
 
 // Slice initializers.
-public extension ShapedArraySlice {
+extension ShapedArraySlice {
     /// Creates a `ShapedArraySlice` with the specified shape and contiguous scalars in row-major
     /// order.
     /// - Precondition: The number of scalars must equal the product of the dimensions of the shape.
-    init(shape: __owned [Int], scalars: __owned [Scalar]) {
+    public init(shape: __owned [Int], scalars: __owned [Scalar]) {
         self.init(base: ShapedArray(shape: shape, scalars: scalars))
     }
 
     /// Creates an `ShapedArraySlice` with the specified shape and sequence of scalars in row-major
     /// order.
     /// - Precondition: The number of scalars must equal the product of the dimensions of the shape.
-    init<S: Sequence>(shape: __owned [Int], scalars: __shared S) where S.Element == Scalar {
+    public init<S: Sequence>(shape: __owned [Int], scalars: __shared S) where S.Element == Scalar {
         self.init(base: ShapedArray(shape: shape, scalars: scalars))
     }
 
     /// Creates a `ShapedArraySlice` from a scalar value.
-    init(_ scalar: __owned Scalar) {
+    public init(_ scalar: __owned Scalar) {
         self.init(base: ShapedArray(scalar))
     }
 
@@ -752,7 +757,7 @@ public extension ShapedArraySlice {
     ///   - shape: The shape of the `ShapedArraySlice`.
     @inlinable
     @available(*, deprecated, renamed: "init(repeating:shape:)")
-    init(shape: __owned [Int], repeating repeatedValue: __owned Scalar) {
+    public init(shape: __owned [Int], repeating repeatedValue: __owned Scalar) {
         self.init(repeating: repeatedValue, shape: shape)
     }
 
@@ -760,12 +765,12 @@ public extension ShapedArraySlice {
     /// - Parameters:
     ///   - repeatedValue: The scalar value to repeat.
     ///   - shape: The shape of the `ShapedArraySlice`.
-    init(repeating repeatedValue: __owned Scalar, shape: __owned [Int]) {
+    public init(repeating repeatedValue: __owned Scalar, shape: __owned [Int]) {
         self.init(base: ShapedArray(repeating: repeatedValue, shape: shape))
     }
 }
 
-internal extension ShapedArraySlice {
+extension ShapedArraySlice {
     /// The range of scalars from the base `ShapedArray` represented by a `ShapedArraySlice`.
     var scalarRange: Range<Int> {
         let trimmedShape = base.shape.dropFirst()
@@ -787,14 +792,14 @@ internal extension ShapedArraySlice {
     }
 }
 
-public extension ShapedArraySlice {
+extension ShapedArraySlice {
     /// Calls a closure with a pointer to the `ShapedArraySlice`’s contiguous storage.
     /// - Parameter body: A closure with an `UnsafeBufferPointer` parameter that points to the
     ///   contiguous storage for the `ShapedArraySlice`. If no such storage exists, it is created.
     ///   If body has a return value, that value is also used as the return value for the
     ///   `withUnsafeBufferPointer(_:)` method. The pointer argument is valid only for the duration
     ///   of the method's execution.
-    func withUnsafeBufferPointer<Result>(
+    public func withUnsafeBufferPointer<Result>(
         _ body: (UnsafeBufferPointer<Scalar>) throws -> Result
     ) rethrows -> Result {
         return try base.withUnsafeBufferPointer { baseBuffPtr in
@@ -813,7 +818,7 @@ public extension ShapedArraySlice {
     ///   created. If body has a return value, that value is also used as the return value for the
     ///   `withUnsafeMutableBufferPointer(_:)` method. The pointer argument is valid only for the
     ///   duration of the method’s execution.
-    mutating func withUnsafeMutableBufferPointer<Result>(
+    public mutating func withUnsafeMutableBufferPointer<Result>(
         _ body: (inout UnsafeMutableBufferPointer<Scalar>) throws -> Result
     ) rethrows -> Result {
         // NOTE: Copying `scalarRange` to a local variable here is necessary for
@@ -908,8 +913,8 @@ extension ShapedArraySlice: RandomAccessCollection, MutableCollection {
 }
 
 // Tensor conversion.
-public extension ShapedArraySlice where Scalar: TensorFlowScalar {
-    init(_ tensor: __shared Tensor<Scalar>) {
+extension ShapedArraySlice where Scalar: TensorFlowScalar {
+    public init(_ tensor: __shared Tensor<Scalar>) {
         self.init(base: tensor.array)
     }
 }
@@ -917,6 +922,7 @@ public extension ShapedArraySlice where Scalar: TensorFlowScalar {
 // Array literal conversion.
 extension ShapedArraySlice: ExpressibleByArrayLiteral where Scalar: TensorFlowScalar {
     public typealias ArrayLiteralElement = _TensorElementLiteral<Scalar>
+
     @inlinable
     public init(arrayLiteral elements: _TensorElementLiteral<Scalar>...) {
         precondition(!elements.isEmpty, "Cannot create a 'ShapedArraySlice' with no elements.")
@@ -986,12 +992,13 @@ extension ShapedArraySlice: Codable where Scalar: Codable {
     }
 }
 
-fileprivate extension _ShapedArrayProtocol where Scalar: Equatable {
-    func _isEqual(to other: Self) -> Bool {
-        return shape == other.shape && withUnsafeBufferPointer { selfBuf in
-            other.withUnsafeBufferPointer { otherBuf in
-                selfBuf.elementsEqual(otherBuf)
+extension _ShapedArrayProtocol where Scalar: Equatable {
+    fileprivate func _isEqual(to other: Self) -> Bool {
+        return shape == other.shape
+            && withUnsafeBufferPointer { selfBuf in
+                other.withUnsafeBufferPointer { otherBuf in
+                    selfBuf.elementsEqual(otherBuf)
+                }
             }
-        }
     }
 }

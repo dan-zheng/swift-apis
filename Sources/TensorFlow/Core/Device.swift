@@ -1,7 +1,7 @@
 /// A device on which `Tensor`s can be allocated.
 ///
 /// Currently, this is a stub because TensorFlow transfers tensors between devices on demand.
-public struct Device {
+public enum Device {
     public static var `default`: Device { Device() }
 }
 

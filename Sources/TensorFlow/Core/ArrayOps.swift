@@ -14,7 +14,7 @@
 
 import CTensorFlow
 
-public extension _Raw {
+extension _Raw {
     /// Saves tensors in V2 checkpoint format.
     ///
     /// By default, saves the named tensors in full.  If the caller wishes to save specific slices
@@ -29,7 +29,7 @@ public extension _Raw {
     ///     indicate that they are non-partitioned tensors.
     ///   - tensors: `N` tensors to save.
     @inlinable
-    static func saveV2(
+    public static func saveV2(
         prefix: StringTensor,
         tensorNames: StringTensor,
         shapeAndSlices: StringTensor,
@@ -84,7 +84,7 @@ public extension _Raw {
     /// - Output tensors: shape {N}.  The restored tensors, whose shapes are read from the
     ///   checkpoint directly.
     @inlinable
-    static func restoreV2(
+    public static func restoreV2(
         prefix: StringTensor,
         tensorNames: StringTensor,
         shapeAndSlices: StringTensor,
@@ -101,7 +101,7 @@ public extension _Raw {
 
         var count: Int32 = Int32(dtypes.count)
         let buffer: UnsafeMutablePointer<CTensorHandle> =
-        UnsafeMutablePointer.allocate(capacity: Int(count))
+            UnsafeMutablePointer.allocate(capacity: Int(count))
         defer { buffer.deallocate() }
         _TFCOpSetDeviceFromScope(op, s)
         _TFCEagerExecute(op, UnsafeMutablePointer<CTensorHandle?>(buffer), &count, s)

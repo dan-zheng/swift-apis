@@ -38,8 +38,8 @@ public protocol TensorArrayProtocol {
     init<C: RandomAccessCollection>(_handles: C) where C.Element: _AnyTensorHandle
 }
 
-public extension TensorArrayProtocol {
-    init<C: RandomAccessCollection>(_handles: C) where C.Element: _AnyTensorHandle {
+extension TensorArrayProtocol {
+    public init<C: RandomAccessCollection>(_handles: C) where C.Element: _AnyTensorHandle {
         let status = TF_NewStatus()
         defer { TF_DeleteStatus(status) }
         let buffer = UnsafeMutableBufferPointer<CTensorHandle>.allocate(capacity: _handles.count)
@@ -54,7 +54,7 @@ public extension TensorArrayProtocol {
         self.init(_owning: baseAddress, count: _handles.count)
     }
 
-    var _tensorHandles: [_AnyTensorHandle] {
+    public var _tensorHandles: [_AnyTensorHandle] {
         let status = TF_NewStatus()
         defer { TF_DeleteStatus(status) }
         let count = Int(_tensorHandleCount)
@@ -89,21 +89,22 @@ public protocol TensorGroup: TensorArrayProtocol {
     init(_owning tensorHandles: UnsafePointer<CTensorHandle>?)
 }
 
-public extension TensorGroup {
+extension TensorGroup {
     /// The number of tensor fields in this type.
-    static var _tensorHandleCount: Int32 { return Int32(Self._typeList.count) }
+    public static var _tensorHandleCount: Int32 { return Int32(Self._typeList.count) }
 
     /// An array of `nil`s with the same number of elements as `_outputTypeList`. The `nil`
     /// represents unknown shape.
-    static var _unknownShapeList: [TensorShape?] {
+    public static var _unknownShapeList: [TensorShape?] {
         return Array(repeating: nil, count: _typeList.count)
     }
 
     // The following instance properties are from `TensorArrayProtocol`.
-    var _tensorHandleCount: Int32 { return Int32(Self._typeList.count) }
-    var _typeList: [TensorDataType] { return Self._typeList }
+    public var _tensorHandleCount: Int32 { return Int32(Self._typeList.count) }
 
-    init(_owning tensorHandles: UnsafePointer<CTensorHandle>?, count: Int) {
+    public var _typeList: [TensorDataType] { return Self._typeList }
+
+    public init(_owning tensorHandles: UnsafePointer<CTensorHandle>?, count: Int) {
         precondition(count == Self._typeList.count)
         self.init(_owning: tensorHandles)
     }
@@ -300,9 +301,10 @@ extension Array: TensorArrayProtocol where Element: TensorGroup {
     }
 
     public var _typeList: [TensorDataType] {
-        return Array<TensorDataType>([[TensorDataType]](
-            repeating: Element._typeList,
-            count: Int(count)).joined())
+        return [TensorDataType](
+            [[TensorDataType]](
+                repeating: Element._typeList,
+                count: Int(count)).joined())
     }
 
     public var _tensorHandles: ([_AnyTensorHandle]) {
@@ -316,9 +318,11 @@ extension Array: TensorArrayProtocol where Element: TensorGroup {
 
     public init(_owning tensorHandles: UnsafePointer<CTensorHandle>?, count: Int) {
         let size = count / Int(Element._tensorHandleCount)
-        self = Array((0..<size).map { Element.init(
-            _owning: tensorHandles?.advanced(by: $0 * Int(Element._tensorHandleCount)))
-        })
+        self = Array(
+            (0..<size).map {
+                Element.init(
+                    _owning: tensorHandles?.advanced(by: $0 * Int(Element._tensorHandleCount)))
+            })
     }
 
     public init<C: RandomAccessCollection>(

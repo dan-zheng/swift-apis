@@ -14,8 +14,10 @@
 
 /// A layer that sequentially composes two other layers.
 public struct Sequential<Layer1: Module, Layer2: Layer>: Module
-    where Layer1.Output == Layer2.Input,
-          Layer1.TangentVector.VectorSpaceScalar == Layer2.TangentVector.VectorSpaceScalar {
+where
+    Layer1.Output == Layer2.Input,
+    Layer1.TangentVector.VectorSpaceScalar == Layer2.TangentVector.VectorSpaceScalar
+{
     public var layer1: Layer1
     public var layer2: Layer2
 
@@ -24,7 +26,7 @@ public struct Sequential<Layer1: Module, Layer2: Layer>: Module
         self.layer2 = layer2
     }
 
-    @differentiable(wrt: self)
+    @differentiable(wrt:self)
     public func callAsFunction(_ input: Layer1.Input) -> Layer2.Output {
         layer2(layer1(input))
     }
@@ -40,11 +42,9 @@ extension Sequential: Layer where Layer1: Layer {
         layer2(layer1(input))
     }
 }
-
-@_functionBuilder
-public struct LayerBuilder {
+public enum LayerBuilder {
     public static func buildBlock<L1: Module, L2: Layer>(_ l1: L1, _ l2: L2) -> Sequential<L1, L2>
-        where L1.Output == L2.Input {
+    where L1.Output == L2.Input {
         Sequential(l1, l2)
     }
 
@@ -53,7 +53,8 @@ public struct LayerBuilder {
         L2: Layer,
         L3: Layer
     >(_ l1: L1, _ l2: L2, _ l3: L3)
-        -> Sequential<L1, Sequential<L2, L3>> where
+        -> Sequential<L1, Sequential<L2, L3>>
+    where
         L1.Output == L2.Input,
         L2.Output == L3.Input,
         L1.TangentVector.VectorSpaceScalar == L2.TangentVector.VectorSpaceScalar,
@@ -68,7 +69,8 @@ public struct LayerBuilder {
         L3: Layer,
         L4: Layer
     >(_ l1: L1, _ l2: L2, _ l3: L3, _ l4: L4)
-        -> Sequential<L1, Sequential<L2, Sequential<L3, L4>>> where
+        -> Sequential<L1, Sequential<L2, Sequential<L3, L4>>>
+    where
         L1.Output == L2.Input,
         L2.Output == L3.Input,
         L3.Output == L4.Input,
@@ -86,7 +88,8 @@ public struct LayerBuilder {
         L4: Layer,
         L5: Layer
     >(_ l1: L1, _ l2: L2, _ l3: L3, _ l4: L4, _ l5: L5)
-        -> Sequential<L1, Sequential<L2, Sequential<L3, Sequential<L4, L5>>>> where
+        -> Sequential<L1, Sequential<L2, Sequential<L3, Sequential<L4, L5>>>>
+    where
         L1.Output == L2.Input,
         L2.Output == L3.Input,
         L3.Output == L4.Input,
@@ -107,7 +110,8 @@ public struct LayerBuilder {
         L5: Layer,
         L6: Layer
     >(_ l1: L1, _ l2: L2, _ l3: L3, _ l4: L4, _ l5: L5, _ l6: L6)
-        -> Sequential<L1, Sequential<L2, Sequential<L3, Sequential<L4, Sequential<L5, L6>>>>> where
+        -> Sequential<L1, Sequential<L2, Sequential<L3, Sequential<L4, Sequential<L5, L6>>>>>
+    where
         L1.Output == L2.Input,
         L2.Output == L3.Input,
         L3.Output == L4.Input,
@@ -131,7 +135,10 @@ public struct LayerBuilder {
         L6: Layer,
         L7: Layer
     >(_ l1: L1, _ l2: L2, _ l3: L3, _ l4: L4, _ l5: L5, _ l6: L6, _ l7: L7)
-        -> Sequential<L1, Sequential<L2, Sequential<L3, Sequential<L4, Sequential<L5, Sequential<L6, L7>>>>>> where
+        -> Sequential<
+            L1, Sequential<L2, Sequential<L3, Sequential<L4, Sequential<L5, Sequential<L6, L7>>>>>
+        >
+    where
         L1.Output == L2.Input,
         L2.Output == L3.Input,
         L3.Output == L4.Input,
@@ -145,7 +152,8 @@ public struct LayerBuilder {
         L5.TangentVector.VectorSpaceScalar == L6.TangentVector.VectorSpaceScalar,
         L6.TangentVector.VectorSpaceScalar == L7.TangentVector.VectorSpaceScalar
     {
-        Sequential(l1, Sequential(l2, Sequential(l3, Sequential(l4, Sequential(l5, Sequential(l6, l7))))))
+        Sequential(
+            l1, Sequential(l2, Sequential(l3, Sequential(l4, Sequential(l5, Sequential(l6, l7))))))
     }
 
     public static func buildBlock<
@@ -158,7 +166,14 @@ public struct LayerBuilder {
         L7: Layer,
         L8: Layer
     >(_ l1: L1, _ l2: L2, _ l3: L3, _ l4: L4, _ l5: L5, _ l6: L6, _ l7: L7, _ l8: L8)
-        -> Sequential<L1, Sequential<L2, Sequential<L3, Sequential<L4, Sequential<L5, Sequential<L6, Sequential<L7, L8>>>>>>> where
+        -> Sequential<
+            L1,
+            Sequential<
+                L2,
+                Sequential<L3, Sequential<L4, Sequential<L5, Sequential<L6, Sequential<L7, L8>>>>>
+            >
+        >
+    where
         L1.Output == L2.Input,
         L2.Output == L3.Input,
         L3.Output == L4.Input,
@@ -174,7 +189,11 @@ public struct LayerBuilder {
         L6.TangentVector.VectorSpaceScalar == L7.TangentVector.VectorSpaceScalar,
         L7.TangentVector.VectorSpaceScalar == L8.TangentVector.VectorSpaceScalar
     {
-        Sequential(l1, Sequential(l2, Sequential(l3, Sequential(l4, Sequential(l5, Sequential(l6, Sequential(l7, l8)))))))
+        Sequential(
+            l1,
+            Sequential(
+                l2,
+                Sequential(l3, Sequential(l4, Sequential(l5, Sequential(l6, Sequential(l7, l8)))))))
     }
 
     public static func buildBlock<
@@ -188,7 +207,19 @@ public struct LayerBuilder {
         L8: Layer,
         L9: Layer
     >(_ l1: L1, _ l2: L2, _ l3: L3, _ l4: L4, _ l5: L5, _ l6: L6, _ l7: L7, _ l8: L8, _ l9: L9)
-        -> Sequential<L1, Sequential<L2, Sequential<L3, Sequential<L4, Sequential<L5, Sequential<L6, Sequential<L7, Sequential<L8, L9>>>>>>>> where
+        -> Sequential<
+            L1,
+            Sequential<
+                L2,
+                Sequential<
+                    L3,
+                    Sequential<
+                        L4, Sequential<L5, Sequential<L6, Sequential<L7, Sequential<L8, L9>>>>
+                    >
+                >
+            >
+        >
+    where
         L1.Output == L2.Input,
         L2.Output == L3.Input,
         L3.Output == L4.Input,
@@ -206,7 +237,14 @@ public struct LayerBuilder {
         L7.TangentVector.VectorSpaceScalar == L8.TangentVector.VectorSpaceScalar,
         L8.TangentVector.VectorSpaceScalar == L9.TangentVector.VectorSpaceScalar
     {
-        Sequential(l1, Sequential(l2, Sequential(l3, Sequential(l4, Sequential(l5, Sequential(l6, Sequential(l7, Sequential(l8, l9))))))))
+        Sequential(
+            l1,
+            Sequential(
+                l2,
+                Sequential(
+                    l3,
+                    Sequential(
+                        l4, Sequential(l5, Sequential(l6, Sequential(l7, Sequential(l8, l9))))))))
     }
 
     public static func buildBlock<
@@ -220,8 +258,26 @@ public struct LayerBuilder {
         L8: Layer,
         L9: Layer,
         L10: Layer
-    >(_ l1: L1, _ l2: L2, _ l3: L3, _ l4: L4, _ l5: L5, _ l6: L6, _ l7: L7, _ l8: L8, _ l9: L9, _ l10: L10)
-        -> Sequential<L1, Sequential<L2, Sequential<L3, Sequential<L4, Sequential<L5, Sequential<L6, Sequential<L7, Sequential<L8, Sequential<L9, L10>>>>>>>>> where
+    >(
+        _ l1: L1, _ l2: L2, _ l3: L3, _ l4: L4, _ l5: L5, _ l6: L6, _ l7: L7, _ l8: L8, _ l9: L9,
+        _ l10: L10
+    )
+        -> Sequential<
+            L1,
+            Sequential<
+                L2,
+                Sequential<
+                    L3,
+                    Sequential<
+                        L4,
+                        Sequential<
+                            L5, Sequential<L6, Sequential<L7, Sequential<L8, Sequential<L9, L10>>>>
+                        >
+                    >
+                >
+            >
+        >
+    where
         L1.Output == L2.Input,
         L2.Output == L3.Input,
         L3.Output == L4.Input,
@@ -241,7 +297,17 @@ public struct LayerBuilder {
         L8.TangentVector.VectorSpaceScalar == L9.TangentVector.VectorSpaceScalar,
         L9.TangentVector.VectorSpaceScalar == L10.TangentVector.VectorSpaceScalar
     {
-        Sequential(l1, Sequential(l2, Sequential(l3, Sequential(l4, Sequential(l5, Sequential(l6, Sequential(l7, Sequential(l8, Sequential(l9, l10)))))))))
+        Sequential(
+            l1,
+            Sequential(
+                l2,
+                Sequential(
+                    l3,
+                    Sequential(
+                        l4,
+                        Sequential(
+                            l5, Sequential(l6, Sequential(l7, Sequential(l8, Sequential(l9, l10)))))
+                    ))))
     }
 
 }

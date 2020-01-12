@@ -28,12 +28,15 @@ class TFGraph {
 
     /// The pointer to the underlying TF Graph.
     let cTFGraph: CTFGraph = TF_NewGraph()
+
     var inputs: [TF_Output] = []
     var nodes: [CTFOperation?] = []
     var outputs: [TF_Output] = []
+
     /// An array representing how the outputs are grouped. The grouping
     /// corresponds to a higher-level notion like TensorGroup.
     var outputGroupCounts: [Int] = []
+
     var name: String { "lazyTrace_\(nodeCount)" }
 
     /// A status object to pass to TF graph building operations.
@@ -127,7 +130,7 @@ class TFGraph {
                 }
             }
         case .optionalTensorShape(let value):
-            if let shape = value  {
+            if let shape = value {
                 let dimensions: [Int64] = shape.dimensions.map(Int64.init)
                 dimensions.withUnsafeBufferPointer { buffer in
                     TF_SetAttrShape(description, name, buffer.baseAddress, Int32(buffer.count))
@@ -241,15 +244,24 @@ class TFFunction {
             let tracedGraphFn = TF_GraphToFunction(
                 cTFGraph,
                 tracedFnName,
-                /*append_hash_to_fn_name*/ (name == nil ? 1 : 0),
-                /*num_opers*/ Int32(operations.count),
-                /*opers*/ base,
-                /*numinputs*/ Int32(inputs.count),
-                /*inputs*/ inputs,
-                /*noutputs*/ Int32(outputs.count),
-                /*outputs*/ outputs,
-                /*outputnames*/ nil,
-                /*functionoptions*/ nil,
+                // append_hash_to_fn_name
+                (name == nil ? 1 : 0),
+                // num_opers
+                Int32(operations.count),
+                // opers
+                base,
+                // numinputs
+                Int32(inputs.count),
+                // inputs
+                inputs,
+                // noutputs
+                Int32(outputs.count),
+                // outputs
+                outputs,
+                // outputnames
+                nil,
+                // functionoptions
+                nil,
                 "",
                 status)
             checkOk(status)
@@ -303,7 +315,7 @@ class TFFunction {
         TFE_Execute(eagerOp, &returnValues, &outputReturnValueCount, status)
         checkOk(status)
 
-        return returnValues.map  { TFETensorHandle(_owning: $0!) }
+        return returnValues.map { TFETensorHandle(_owning: $0!) }
     }
 }
 
@@ -316,4 +328,3 @@ extension TFFunction: CustomStringConvertible {
         return result
     }
 }
-

@@ -13,10 +13,12 @@
 // limitations under the License.
 
 public protocol Module: EuclideanDifferentiable, KeyPathIterable
-    where TangentVector: VectorProtocol & ElementaryFunctions &
-                         PointwiseMultiplicative & KeyPathIterable {
+where
+    TangentVector: VectorProtocol & ElementaryFunctions & PointwiseMultiplicative & KeyPathIterable
+{
     /// The input type of the layer.
     associatedtype Input
+
     /// The output type of the layer.
     associatedtype Output: Differentiable
 
@@ -44,16 +46,17 @@ public protocol Layer: Module where Input: Differentiable {
     func callAsFunction(_ input: Input) -> Output
 }
 
-public extension Layer {
+extension Layer {
     @differentiable
-    func call(_  input: Input) -> Output {
+    public func call(_ input: Input) -> Output {
         callAsFunction(input)
     }
 }
 
 /// An empty struct representing empty `TangentVector`s for parameterless layers.
 public struct EmptyTangentVector: EuclideanDifferentiable, VectorProtocol, ElementaryFunctions,
-                                  PointwiseMultiplicative, KeyPathIterable {
+    PointwiseMultiplicative, KeyPathIterable
+{
     public typealias VectorSpaceScalar = Float
     public typealias TangentVector = Self
 
@@ -75,34 +78,38 @@ public protocol ParameterlessLayer: Layer where TangentVector == EmptyTangentVec
     func callAsFunction(_ input: Input) -> Output
 }
 
-public extension ParameterlessLayer {
-    mutating func move(along direction: EmptyTangentVector) {}
-    var differentiableVectorView: EmptyTangentVector { EmptyTangentVector() }
+extension ParameterlessLayer {
+    public mutating func move(along direction: EmptyTangentVector) {}
+    public var differentiableVectorView: EmptyTangentVector { EmptyTangentVector() }
 }
 
-public extension Layer {
+extension Layer {
     /// Returns the inference output obtained from applying the layer to the given input.
     ///
     /// - Parameter input: The input to the layer.
     /// - Returns: The inference output.
-    func inferring(from input: Input) -> Output {
+    public func inferring(from input: Input) -> Output {
         withLearningPhase(LearningPhase.inference) { self(input) }
     }
 
     // TODO(TF-433, SR-11882): Remove this custom derivative when
     // differentiation supports `rethrows` functions and currying.
-    @derivative(of: inferring(from:))
+    @derivative(of:inferring(from:))
     @usableFromInline
     internal func _vjpInferring(from input: Input)
-        -> (value: Output, pullback: (Output.TangentVector)
-            -> (TangentVector, Input.TangentVector)) {
+        -> (
+            value: Output,
+            pullback: (Output.TangentVector)
+                -> (TangentVector, Input.TangentVector)
+        )
+    {
         withLearningPhase(LearningPhase.inference) {
             let (output, pullback) = appliedForBackpropagation(to: input)
             return (output, { v in pullback(v) })
         }
     }
 
-    typealias Backpropagator = (_ direction: Output.TangentVector)
+    public typealias Backpropagator = (_ direction: Output.TangentVector)
         -> (layerGradient: TangentVector, inputGradient: Input.TangentVector)
 
     /// Returns the inference output and the backpropagation function obtained from applying the
@@ -112,8 +119,9 @@ public extension Layer {
     /// - Returns: A tuple containing the output and the backpropagation function. The
     ///   backpropagation function (a.k.a. backpropagator) takes a direction vector and returns the
     ///   gradients at the layer and at the input, respectively.
-    func appliedForBackpropagation(to input: Input)
-        -> (output: Output, backpropagator: Backpropagator) {
+    public func appliedForBackpropagation(to input: Input)
+        -> (output: Output, backpropagator: Backpropagator)
+    {
         let (out, pullback) = Swift.valueWithPullback(at: self, input) { layer, input in
             return layer(input)
         }
@@ -121,7 +129,7 @@ public extension Layer {
     }
 }
 
-public extension Differentiable {
+extension Differentiable {
     /// Returns the output computed by applying a sequence of layers to the previous layer's output,
     /// except that the first layer's input is `self`.
     ///
@@ -130,8 +138,8 @@ public extension Differentiable {
     ///   - l2: The second layer.
     /// - Returns: The final layer's output after sequential application.
     @differentiable
-    func sequenced<L1: Layer, L2: Layer>(through l1: L1, _ l2: L2) -> L2.Output
-        where L1.Input == Self, L1.Output == L2.Input {
+    public func sequenced<L1: Layer, L2: Layer>(through l1: L1, _ l2: L2) -> L2.Output
+    where L1.Input == Self, L1.Output == L2.Input {
         let o1 = l1(self)
         return l2(o1)
     }
@@ -145,8 +153,9 @@ public extension Differentiable {
     ///   - l3: The third layer.
     /// - Returns: The final layer's output after sequential application.
     @differentiable
-    func sequenced<L1: Layer, L2: Layer, L3: Layer>(through l1: L1, _ l2: L2, _ l3: L3) -> L3.Output
-        where L1.Input == Self, L1.Output == L2.Input, L2.Output == L3.Input {
+    public func sequenced<L1: Layer, L2: Layer, L3: Layer>(through l1: L1, _ l2: L2, _ l3: L3) -> L3
+        .Output
+    where L1.Input == Self, L1.Output == L2.Input, L2.Output == L3.Input {
         let o1 = l1(self)
         let o2 = l2(o1)
         return l3(o2)
@@ -162,11 +171,13 @@ public extension Differentiable {
     ///   - l4: The fourth layer.
     /// - Returns: The final layer's output after sequential application.
     @differentiable
-    func sequenced<L1: Layer, L2: Layer, L3: Layer, L4: Layer>(
+    public func sequenced<L1: Layer, L2: Layer, L3: Layer, L4: Layer>(
         through l1: L1, _ l2: L2, _ l3: L3, _ l4: L4
     ) -> L4.Output
-        where L1.Input == Self, L1.Output == L2.Input, L2.Output == L3.Input,
-              L3.Output == L4.Input {
+    where
+        L1.Input == Self, L1.Output == L2.Input, L2.Output == L3.Input,
+        L3.Output == L4.Input
+    {
         let o1 = l1(self)
         let o2 = l2(o1)
         let o3 = l3(o2)
@@ -184,11 +195,13 @@ public extension Differentiable {
     ///   - l5: The fifth layer.
     /// - Returns: The final layer's output after sequential application.
     @differentiable
-    func sequenced<L1: Layer, L2: Layer, L3: Layer, L4: Layer, L5: Layer>(
+    public func sequenced<L1: Layer, L2: Layer, L3: Layer, L4: Layer, L5: Layer>(
         through l1: L1, _ l2: L2, _ l3: L3, _ l4: L4, _ l5: L5
     ) -> L5.Output
-        where L1.Input == Self, L1.Output == L2.Input, L2.Output == L3.Input, L3.Output == L4.Input,
-              L4.Output == L5.Input {
+    where
+        L1.Input == Self, L1.Output == L2.Input, L2.Output == L3.Input, L3.Output == L4.Input,
+        L4.Output == L5.Input
+    {
         let o1 = l1(self)
         let o2 = l2(o1)
         let o3 = l3(o2)
@@ -208,11 +221,13 @@ public extension Differentiable {
     ///   - l6: The sixth layer.
     /// - Returns: The final layer's output after sequential application.
     @differentiable
-    func sequenced<L1: Layer, L2: Layer, L3: Layer, L4: Layer, L5: Layer, L6: Layer>(
+    public func sequenced<L1: Layer, L2: Layer, L3: Layer, L4: Layer, L5: Layer, L6: Layer>(
         through l1: L1, _ l2: L2, _ l3: L3, _ l4: L4, _ l5: L5, _ l6: L6
     ) -> L6.Output
-        where L1.Input == Self, L1.Output == L2.Input, L2.Output == L3.Input, L3.Output == L4.Input,
-              L4.Output == L5.Input, L5.Output == L6.Input {
+    where
+        L1.Input == Self, L1.Output == L2.Input, L2.Output == L3.Input, L3.Output == L4.Input,
+        L4.Output == L5.Input, L5.Output == L6.Input
+    {
         let o1 = l1(self)
         let o2 = l2(o1)
         let o3 = l3(o2)
@@ -222,10 +237,10 @@ public extension Differentiable {
     }
 }
 
-
 /// A mutable, shareable, owning reference to a tensor.
 public final class Parameter<Scalar: TensorFlowScalar> {
     public var value: Tensor<Scalar>
+
     public init(_ value: Tensor<Scalar>) {
         self.value = value
     }

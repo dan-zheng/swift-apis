@@ -20,14 +20,19 @@
 public struct Conv1D<Scalar: TensorFlowFloatingPoint>: Layer {
     /// The 3-D convolution filter.
     public var filter: Tensor<Scalar>
+
     /// The bias vector.
     public var bias: Tensor<Scalar>
+
     /// The element-wise activation function.
     @noDerivative public let activation: Activation
+
     /// The stride of the sliding window for the temporal dimension.
     @noDerivative public let stride: Int
+
     /// The padding algorithm for convolution.
     @noDerivative public let padding: Padding
+
     /// The dilation factor for the temporal dimension.
     @noDerivative public let dilation: Int
 
@@ -76,16 +81,17 @@ public struct Conv1D<Scalar: TensorFlowFloatingPoint>: Layer {
     /// - Note: Padding size equals zero when using `.valid`.
     @differentiable
     public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
-        activation(conv1D(
-            input,
-            filter: filter,
-            stride: stride,
-            padding: padding,
-            dilation: dilation) + bias)
+        activation(
+            conv1D(
+                input,
+                filter: filter,
+                stride: stride,
+                padding: padding,
+                dilation: dilation) + bias)
     }
 }
 
-public extension Conv1D where Scalar.RawSignificand: FixedWidthInteger {
+extension Conv1D where Scalar.RawSignificand: FixedWidthInteger {
     /// Creates a `Conv1D` layer with the specified filter shape, stride, padding, dilation and
     /// element-wise activation function.
     ///
@@ -98,7 +104,7 @@ public extension Conv1D where Scalar.RawSignificand: FixedWidthInteger {
     ///   - activation: The element-wise activation function.
     ///   - filterInitializer: Initializer to use for the filter parameters.
     ///   - biasInitializer: Initializer to use for the bias parameters.
-    init(
+    public init(
         filterShape: (Int, Int, Int),
         stride: Int = 1,
         padding: Padding = .valid,
@@ -108,7 +114,8 @@ public extension Conv1D where Scalar.RawSignificand: FixedWidthInteger {
         biasInitializer: ParameterInitializer<Scalar> = zeros()
     ) {
         let filterTensorShape = TensorShape([
-            filterShape.0, filterShape.1, filterShape.2])
+            filterShape.0, filterShape.1, filterShape.2
+        ])
         self.init(
             filter: filterInitializer(filterTensorShape),
             bias: biasInitializer([filterShape.2]),
@@ -127,14 +134,19 @@ public extension Conv1D where Scalar.RawSignificand: FixedWidthInteger {
 public struct Conv2D<Scalar: TensorFlowFloatingPoint>: Layer {
     /// The 4-D convolution filter.
     public var filter: Tensor<Scalar>
+
     /// The bias vector.
     public var bias: Tensor<Scalar>
+
     /// The element-wise activation function.
     @noDerivative public let activation: Activation
+
     /// The strides of the sliding window for spatial dimensions.
     @noDerivative public let strides: (Int, Int)
+
     /// The padding algorithm for convolution.
     @noDerivative public let padding: Padding
+
     /// The dilation factor for spatial dimensions.
     @noDerivative public let dilations: (Int, Int)
 
@@ -192,16 +204,17 @@ public struct Conv2D<Scalar: TensorFlowFloatingPoint>: Layer {
     /// - Note: Padding size equals zero when using `.valid`.
     @differentiable
     public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
-        return activation(conv2D(
-            input,
-            filter: filter,
-            strides: (1, strides.0, strides.1, 1),
-            padding: padding,
-            dilations: (1, dilations.0, dilations.1, 1)) + bias)
+        return activation(
+            conv2D(
+                input,
+                filter: filter,
+                strides: (1, strides.0, strides.1, 1),
+                padding: padding,
+                dilations: (1, dilations.0, dilations.1, 1)) + bias)
     }
 }
 
-public extension Conv2D {
+extension Conv2D {
     /// Creates a `Conv2D` layer with the specified filter shape, strides, padding, dilations and
     /// element-wise activation function.
     ///
@@ -216,7 +229,7 @@ public extension Conv2D {
     ///   - activation: The element-wise activation function.
     ///   - filterInitializer: Initializer to use for the filter parameters.
     ///   - biasInitializer: Initializer to use for the bias parameters.
-    init(
+    public init(
         filterShape: (Int, Int, Int, Int),
         strides: (Int, Int) = (1, 1),
         padding: Padding = .valid,
@@ -226,7 +239,8 @@ public extension Conv2D {
         biasInitializer: ParameterInitializer<Scalar> = zeros()
     ) {
         let filterTensorShape = TensorShape([
-            filterShape.0, filterShape.1, filterShape.2, filterShape.3])
+            filterShape.0, filterShape.1, filterShape.2, filterShape.3
+        ])
         self.init(
             filter: filterInitializer(filterTensorShape),
             bias: biasInitializer([filterShape.3]),
@@ -245,14 +259,19 @@ public extension Conv2D {
 public struct Conv3D<Scalar: TensorFlowFloatingPoint>: Layer {
     /// The 5-D convolution filter.
     public var filter: Tensor<Scalar>
+
     /// The bias vector.
     public var bias: Tensor<Scalar>
+
     /// The element-wise activation function.
     @noDerivative public let activation: Activation
+
     /// The strides of the sliding window for spatial dimensions.
     @noDerivative public let strides: (Int, Int, Int)
+
     /// The padding algorithm for convolution.
     @noDerivative public let padding: Padding
+
     /// The dilation factor for spatial/spatio temporal dimensions.
     @noDerivative public let dilations: (Int, Int, Int)
 
@@ -280,8 +299,9 @@ public struct Conv3D<Scalar: TensorFlowFloatingPoint>: Layer {
         padding: Padding = .valid,
         dilations: (Int, Int, Int) = (1, 1, 1)
     ) {
-        precondition(dilations.2 == 1,
-                     "Dilations in the depth dimension must be 1.")
+        precondition(
+            dilations.2 == 1,
+            "Dilations in the depth dimension must be 1.")
         self.filter = filter
         self.bias = bias
         self.activation = activation
@@ -316,17 +336,18 @@ public struct Conv3D<Scalar: TensorFlowFloatingPoint>: Layer {
     /// - Note: Padding size equals zero when using `.valid`.
     @differentiable
     public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
-        return activation(conv3D(
-            input,
-            filter: filter,
-            strides: (1, strides.0, strides.1, strides.2, 1),
-            padding: padding,
-            dilations: (1, dilations.0, dilations.1, dilations.2, 1)
-        ) + bias)
+        return activation(
+            conv3D(
+                input,
+                filter: filter,
+                strides: (1, strides.0, strides.1, strides.2, 1),
+                padding: padding,
+                dilations: (1, dilations.0, dilations.1, dilations.2, 1)
+            ) + bias)
     }
 }
 
-public extension Conv3D {
+extension Conv3D {
     /// Creates a `Conv3D` layer with the specified filter shape, strides, padding, dilations and
     /// element-wise activation function. The filter tensor is initialized using Glorot uniform
     /// initialization with the specified seed. The bias vector is initialized with zeros.
@@ -342,7 +363,7 @@ public extension Conv3D {
     ///   - activation: The element-wise activation function.
     ///   - filterInitializer: Initializer to use for the filter parameters.
     ///   - biasInitializer: Initializer to use for the bias parameters.
-    init(
+    public init(
         filterShape: (Int, Int, Int, Int, Int),
         strides: (Int, Int, Int) = (1, 1, 1),
         padding: Padding = .valid,
@@ -352,7 +373,8 @@ public extension Conv3D {
         biasInitializer: ParameterInitializer<Scalar> = zeros()
     ) {
         let filterTensorShape = TensorShape([
-            filterShape.0, filterShape.1, filterShape.2, filterShape.3, filterShape.4])
+            filterShape.0, filterShape.1, filterShape.2, filterShape.3, filterShape.4
+        ])
         self.init(
             filter: filterInitializer(filterTensorShape),
             bias: biasInitializer([filterShape.4]),
@@ -371,14 +393,19 @@ public extension Conv3D {
 public struct TransposedConv1D<Scalar: TensorFlowFloatingPoint>: Layer {
     /// The 1-D convolution kernel.
     public var filter: Tensor<Scalar>
+
     /// The bias vector.
     public var bias: Tensor<Scalar>
+
     /// The element-wise activation function.
     @noDerivative public let activation: Activation
+
     /// The strides of the sliding window for spatial dimensions.
     @noDerivative public let stride: Int
+
     /// The padding algorithm for convolution.
     @noDerivative public let padding: Padding
+
     /// The paddingIndex property allows us to handle computation based on padding.
     @noDerivative public let paddingIndex: Int
 
@@ -416,20 +443,20 @@ public struct TransposedConv1D<Scalar: TensorFlowFloatingPoint>: Layer {
     @differentiable
     public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
         let batchSize = input.shape[0]
-        let w = (input.shape[1] - (1 * paddingIndex)) *
-            stride + (filter.shape[0] * paddingIndex)
+        let w = (input.shape[1] - (1 * paddingIndex)) * stride + (filter.shape[0] * paddingIndex)
         let c = filter.shape[2]
         let newShape = Tensor<Int32>([Int32(batchSize), 1, Int32(w), Int32(c)])
-        return activation(conv2DBackpropInput(
-            input.expandingShape(at: 1),
-            shape: newShape,
-            filter: filter.expandingShape(at: 0),
-            strides: (1, 1, stride, 1),
-            padding: padding) + bias)
+        return activation(
+            conv2DBackpropInput(
+                input.expandingShape(at: 1),
+                shape: newShape,
+                filter: filter.expandingShape(at: 0),
+                strides: (1, 1, stride, 1),
+                padding: padding) + bias)
     }
 }
 
-public extension TransposedConv1D {
+extension TransposedConv1D {
     /// Creates a `TransposedConv1D` layer with the specified filter shape, strides, padding, and
     /// element-wise activation function. The filter tensor is initialized using Glorot uniform
     /// initialization with the specified generator. The bias vector is initialized with zeros.
@@ -440,7 +467,7 @@ public extension TransposedConv1D {
     ///   - padding: The padding algorithm for convolution.
     ///   - activation: The element-wise activation function.
     ///   - generator: The random number generator for initialization.
-    init(
+    public init(
         filterShape: (Int, Int, Int),
         stride: Int = 1,
         padding: Padding = .valid,
@@ -449,7 +476,8 @@ public extension TransposedConv1D {
         biasInitializer: ParameterInitializer<Scalar> = zeros()
     ) {
         let filterTensorShape = TensorShape([
-            filterShape.0, filterShape.1, filterShape.2])
+            filterShape.0, filterShape.1, filterShape.2
+        ])
         self.init(
             filter: filterInitializer(filterTensorShape),
             bias: biasInitializer([filterShape.2]),
@@ -467,14 +495,19 @@ public extension TransposedConv1D {
 public struct TransposedConv2D<Scalar: TensorFlowFloatingPoint>: Layer {
     /// The 4-D convolution kernel.
     public var filter: Tensor<Scalar>
+
     /// The bias vector.
     public var bias: Tensor<Scalar>
+
     /// The element-wise activation function.
     @noDerivative public let activation: Activation
+
     /// The strides of the sliding window for spatial dimensions.
     @noDerivative public let strides: (Int, Int)
+
     /// The padding algorithm for convolution.
     @noDerivative public let padding: Padding
+
     /// The paddingIndex property allows us to handle computation based on padding.
     @noDerivative public let paddingIndex: Int
 
@@ -513,22 +546,21 @@ public struct TransposedConv2D<Scalar: TensorFlowFloatingPoint>: Layer {
     @differentiable
     public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
         let batchSize = input.shape[0]
-        let h = (input.shape[1] - (1 * paddingIndex)) *
-          strides.0 + (filter.shape[0] * paddingIndex)
-        let w = (input.shape[2] - (1 * paddingIndex)) *
-          strides.1 + (filter.shape[1] * paddingIndex)
+        let h = (input.shape[1] - (1 * paddingIndex)) * strides.0 + (filter.shape[0] * paddingIndex)
+        let w = (input.shape[2] - (1 * paddingIndex)) * strides.1 + (filter.shape[1] * paddingIndex)
         let c = filter.shape[2]
         let newShape = Tensor<Int32>([Int32(batchSize), Int32(h), Int32(w), Int32(c)])
-        return activation(conv2DBackpropInput(
-            input,
-            shape: newShape,
-            filter: filter,
-            strides: (1, strides.0, strides.1, 1),
-            padding: padding) + bias)
+        return activation(
+            conv2DBackpropInput(
+                input,
+                shape: newShape,
+                filter: filter,
+                strides: (1, strides.0, strides.1, 1),
+                padding: padding) + bias)
     }
 }
 
-public extension TransposedConv2D {
+extension TransposedConv2D {
     /// Creates a `TransposedConv2D` layer with the specified filter shape, strides, padding, and
     /// element-wise activation function.
     ///
@@ -540,7 +572,7 @@ public extension TransposedConv2D {
     ///   - activation: The element-wise activation function.
     ///   - filterInitializer: Initializer to use for the filter parameters.
     ///   - biasInitializer: Initializer to use for the bias parameters.
-    init(
+    public init(
         filterShape: (Int, Int, Int, Int),
         strides: (Int, Int) = (1, 1),
         padding: Padding = .valid,
@@ -549,7 +581,8 @@ public extension TransposedConv2D {
         biasInitializer: ParameterInitializer<Scalar> = zeros()
     ) {
         let filterTensorShape = TensorShape([
-            filterShape.0, filterShape.1, filterShape.2, filterShape.3])
+            filterShape.0, filterShape.1, filterShape.2, filterShape.3
+        ])
         self.init(
             filter: filterInitializer(filterTensorShape),
             bias: biasInitializer([filterShape.2]),
@@ -559,7 +592,6 @@ public extension TransposedConv2D {
     }
 }
 
-
 /// A 3-D transposed convolution layer (e.g. spatial transposed convolution over images).
 ///
 /// This layer creates a convolution filter that is transpose-convolved with the layer input
@@ -568,14 +600,19 @@ public extension TransposedConv2D {
 public struct TransposedConv3D<Scalar: TensorFlowFloatingPoint>: Layer {
     /// The 5-D convolution kernel.
     public var filter: Tensor<Scalar>
+
     /// The bias vector.
     public var bias: Tensor<Scalar>
+
     /// The element-wise activation function.
     @noDerivative public let activation: Activation
+
     /// The strides of the sliding window for spatial dimensions.
     @noDerivative public let strides: (Int, Int, Int)
+
     /// The padding algorithm for convolution.
     @noDerivative public let padding: Padding
+
     /// The paddingIndex property allows us to handle computation based on padding.
     @noDerivative public let paddingIndex: Int
 
@@ -613,24 +650,22 @@ public struct TransposedConv3D<Scalar: TensorFlowFloatingPoint>: Layer {
     @differentiable
     public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
         let batchSize = input.shape[0]
-        let w = (input.shape[1] - (1 * paddingIndex)) *
-            strides.0 + (filter.shape[0] * paddingIndex)
-        let h = (input.shape[2] - (1 * paddingIndex)) *
-            strides.1 + (filter.shape[1] * paddingIndex)
-        let d = (input.shape[3] - (1 * paddingIndex)) *
-            strides.2 + (filter.shape[2] * paddingIndex)
+        let w = (input.shape[1] - (1 * paddingIndex)) * strides.0 + (filter.shape[0] * paddingIndex)
+        let h = (input.shape[2] - (1 * paddingIndex)) * strides.1 + (filter.shape[1] * paddingIndex)
+        let d = (input.shape[3] - (1 * paddingIndex)) * strides.2 + (filter.shape[2] * paddingIndex)
         let c = filter.shape[3]
         let newShape = Tensor<Int32>([Int32(batchSize), Int32(w), Int32(h), Int32(d), Int32(c)])
-        return activation(conv3DBackpropInput(
-            input,
-            shape: newShape,
-            filter: filter,
-            strides: (1, strides.0, strides.1, strides.2, 1),
-            padding: padding) + bias)
+        return activation(
+            conv3DBackpropInput(
+                input,
+                shape: newShape,
+                filter: filter,
+                strides: (1, strides.0, strides.1, strides.2, 1),
+                padding: padding) + bias)
     }
 }
 
-public extension TransposedConv3D {
+extension TransposedConv3D {
     /// Creates a `TransposedConv3D` layer with the specified filter shape, strides, padding, and
     /// element-wise activation function. The filter tensor is initialized using Glorot uniform
     /// initialization with the specified generator. The bias vector is initialized with zeros.
@@ -641,7 +676,7 @@ public extension TransposedConv3D {
     ///   - padding: The padding algorithm for convolution.
     ///   - activation: The element-wise activation function.
     ///   - generator: The random number generator for initialization.
-    init(
+    public init(
         filterShape: (Int, Int, Int, Int, Int),
         strides: (Int, Int, Int) = (1, 1, 1),
         padding: Padding = .valid,
@@ -650,7 +685,8 @@ public extension TransposedConv3D {
         biasInitializer: ParameterInitializer<Scalar> = zeros()
     ) {
         let filterTensorShape = TensorShape([
-            filterShape.0, filterShape.1, filterShape.2, filterShape.3, filterShape.4])
+            filterShape.0, filterShape.1, filterShape.2, filterShape.3, filterShape.4
+        ])
         self.init(
             filter: filterInitializer(filterTensorShape),
             bias: biasInitializer([filterShape.4]),
@@ -668,12 +704,16 @@ public extension TransposedConv3D {
 public struct DepthwiseConv2D<Scalar: TensorFlowFloatingPoint>: Layer {
     /// The 4-D convolution kernel.
     public var filter: Tensor<Scalar>
+
     /// The bias vector.
     public var bias: Tensor<Scalar>
+
     /// The element-wise activation function.
     @noDerivative public let activation: Activation
+
     /// The strides of the sliding window for spatial dimensions.
     @noDerivative public let strides: (Int, Int)
+
     /// The padding algorithm for convolution.
     @noDerivative public let padding: Padding
 
@@ -711,15 +751,16 @@ public struct DepthwiseConv2D<Scalar: TensorFlowFloatingPoint>: Layer {
     ///   [batch count, output height, output width, input channel count * channel multiplier]
     @differentiable
     public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
-        return activation(depthwiseConv2D(
-            input,
-            filter: filter,
-            strides: (1, strides.0, strides.1, 1),
-            padding: padding) + bias)
+        return activation(
+            depthwiseConv2D(
+                input,
+                filter: filter,
+                strides: (1, strides.0, strides.1, 1),
+                padding: padding) + bias)
     }
 }
 
-public extension DepthwiseConv2D {
+extension DepthwiseConv2D {
     /// Creates a `DepthwiseConv2D` layer with the specified filter shape, strides, padding, and
     /// element-wise activation function.
     ///
@@ -731,7 +772,7 @@ public extension DepthwiseConv2D {
     ///   - activation: The element-wise activation function.
     ///   - filterInitializer: Initializer to use for the filter parameters.
     ///   - biasInitializer: Initializer to use for the bias parameters.
-    init(
+    public init(
         filterShape: (Int, Int, Int, Int),
         strides: (Int, Int) = (1, 1),
         padding: Padding = .valid,
@@ -740,7 +781,8 @@ public extension DepthwiseConv2D {
         biasInitializer: ParameterInitializer<Scalar> = zeros()
     ) {
         let filterTensorShape = TensorShape([
-            filterShape.0, filterShape.1, filterShape.2, filterShape.3])
+            filterShape.0, filterShape.1, filterShape.2, filterShape.3
+        ])
         self.init(
             filter: filterInitializer(filterTensorShape),
             bias: biasInitializer([filterShape.2 * filterShape.3]),
@@ -853,14 +895,19 @@ public struct ZeroPadding3D<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer
 public struct SeparableConv1D<Scalar: TensorFlowFloatingPoint>: Layer {
     /// The 3-D depthwise convolution kernel.
     public var depthwiseFilter: Tensor<Scalar>
+
     /// The 3-D pointwise convolution kernel.
     public var pointwiseFilter: Tensor<Scalar>
+
     /// The bias vector.
     public var bias: Tensor<Scalar>
+
     /// The element-wise activation function.
     @noDerivative public let activation: Activation
+
     /// The strides of the sliding window for spatial dimensions.
     @noDerivative public let stride: Int
+
     /// The padding algorithm for convolution.
     @noDerivative public let padding: Padding
 
@@ -916,7 +963,7 @@ public struct SeparableConv1D<Scalar: TensorFlowFloatingPoint>: Layer {
     }
 }
 
-public extension SeparableConv1D {
+extension SeparableConv1D {
     /// Creates a `SeparableConv1D` layer with the specified depthwise and pointwise filter shape,
     /// strides, padding, and element-wise activation function.
     ///
@@ -928,7 +975,7 @@ public extension SeparableConv1D {
     ///   - activation: The element-wise activation function.
     ///   - filterInitializer: Initializer to use for the filter parameters.
     ///   - biasInitializer: Initializer to use for the bias parameters.
-    init(
+    public init(
         depthwiseFilterShape: (Int, Int, Int),
         pointwiseFilterShape: (Int, Int, Int),
         stride: Int = 1,
@@ -939,9 +986,11 @@ public extension SeparableConv1D {
         biasInitializer: ParameterInitializer<Scalar> = zeros()
     ) {
         let depthwiseFilterTensorShape = TensorShape([
-            depthwiseFilterShape.0, depthwiseFilterShape.1, depthwiseFilterShape.2])
+            depthwiseFilterShape.0, depthwiseFilterShape.1, depthwiseFilterShape.2
+        ])
         let pointwiseFilterTensorShape = TensorShape([
-            pointwiseFilterShape.0, pointwiseFilterShape.1, pointwiseFilterShape.2])
+            pointwiseFilterShape.0, pointwiseFilterShape.1, pointwiseFilterShape.2
+        ])
         self.init(
             depthwiseFilter: depthwiseFilterInitializer(depthwiseFilterTensorShape),
             pointwiseFilter: pointwiseFilterInitializer(pointwiseFilterTensorShape),
@@ -960,14 +1009,19 @@ public extension SeparableConv1D {
 public struct SeparableConv2D<Scalar: TensorFlowFloatingPoint>: Layer {
     /// The 4-D depthwise convolution kernel.
     public var depthwiseFilter: Tensor<Scalar>
+
     /// The 4-D pointwise convolution kernel.
     public var pointwiseFilter: Tensor<Scalar>
+
     /// The bias vector.
     public var bias: Tensor<Scalar>
+
     /// The element-wise activation function.
     @noDerivative public let activation: Activation
+
     /// The strides of the sliding window for spatial dimensions.
     @noDerivative public let strides: (Int, Int)
+
     /// The padding algorithm for convolution.
     @noDerivative public let padding: Padding
 
@@ -1013,16 +1067,17 @@ public struct SeparableConv2D<Scalar: TensorFlowFloatingPoint>: Layer {
             filter: depthwiseFilter,
             strides: (1, strides.0, strides.1, 1),
             padding: padding)
-        return activation(conv2D(
-            depthwise,
-            filter: pointwiseFilter,
-            strides: (1, 1, 1, 1),
-            padding: padding,
-            dilations: (1, 1, 1, 1)) + bias)
+        return activation(
+            conv2D(
+                depthwise,
+                filter: pointwiseFilter,
+                strides: (1, 1, 1, 1),
+                padding: padding,
+                dilations: (1, 1, 1, 1)) + bias)
     }
 }
 
-public extension SeparableConv2D {
+extension SeparableConv2D {
     /// Creates a `SeparableConv2D` layer with the specified depthwise and pointwise filter shape,
     /// strides, padding, and element-wise activation function.
     ///
@@ -1034,7 +1089,7 @@ public extension SeparableConv2D {
     ///   - activation: The element-wise activation function.
     ///   - filterInitializer: Initializer to use for the filter parameters.
     ///   - biasInitializer: Initializer to use for the bias parameters.
-    init(
+    public init(
         depthwiseFilterShape: (Int, Int, Int, Int),
         pointwiseFilterShape: (Int, Int, Int, Int),
         strides: (Int, Int) = (1, 1),
@@ -1046,10 +1101,12 @@ public extension SeparableConv2D {
     ) {
         let depthwiseFilterTensorShape = TensorShape([
             depthwiseFilterShape.0, depthwiseFilterShape.1, depthwiseFilterShape.2,
-            depthwiseFilterShape.3])
+            depthwiseFilterShape.3
+        ])
         let pointwiseFilterTensorShape = TensorShape([
             pointwiseFilterShape.0, pointwiseFilterShape.1, pointwiseFilterShape.2,
-            pointwiseFilterShape.3])
+            pointwiseFilterShape.3
+        ])
         self.init(
             depthwiseFilter: depthwiseFilterInitializer(depthwiseFilterTensorShape),
             pointwiseFilter: pointwiseFilterInitializer(pointwiseFilterTensorShape),

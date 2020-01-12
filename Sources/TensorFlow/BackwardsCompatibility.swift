@@ -144,5 +144,5 @@ public func sigmoidCrossEntropy<Scalar: TensorFlowFloatingPoint>(
     logits: Tensor<Scalar>,
     labels: Tensor<Scalar>
 ) -> Tensor<Scalar> {
-    sigmoidCrossEntropy(logits: logits, labels:labels, reduction: { $0.mean() })
+    sigmoidCrossEntropy(logits: logits, labels: labels, reduction: { $0.mean() })
 }

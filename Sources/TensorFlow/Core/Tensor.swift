@@ -49,24 +49,24 @@ extension Tensor: AnyTensor {
 // Tensor Properties
 //===------------------------------------------------------------------------------------------===//
 
-public extension Tensor {
+extension Tensor {
     /// The number of dimensions of the `Tensor`.
     @inlinable
-    var rank: Int {
+    public var rank: Int {
         @_semantics("autodiff.nonvarying")
         get { handle.rank }
     }
 
     /// The shape of the `Tensor`.
     @inlinable
-    var shape: TensorShape {
+    public var shape: TensorShape {
         @_semantics("autodiff.nonvarying")
         get { handle.shape }
     }
 
     /// The number of scalars in the `Tensor`.
     @inlinable
-    var scalarCount: Int {
+    public var scalarCount: Int {
         @_semantics("autodiff.nonvarying")
         get {
             let status = _ExecutionContext.global.status
@@ -78,7 +78,7 @@ public extension Tensor {
 
     /// The rank of the tensor, represented as a `Tensor<Int32>`.
     @inlinable
-    var rankTensor: Tensor<Int32> {
+    public var rankTensor: Tensor<Int32> {
         @_semantics("autodiff.nonvarying")
         get {
             return _Raw.rank(self)
@@ -87,7 +87,7 @@ public extension Tensor {
 
     /// The dimensions of the tensor, represented as a `Tensor<Int32>`.
     @inlinable
-    var shapeTensor: Tensor<Int32> {
+    public var shapeTensor: Tensor<Int32> {
         @_semantics("autodiff.nonvarying")
         get {
             return _Raw.shape(self)
@@ -96,7 +96,7 @@ public extension Tensor {
 
     /// The number of scalars in the tensor, represented as a `Tensor<Int32>`.
     @inlinable
-    var scalarCountTensor: Tensor<Int32> {
+    public var scalarCountTensor: Tensor<Int32> {
         @_semantics("autodiff.nonvarying")
         get {
             return _Raw.size(self)
@@ -108,17 +108,17 @@ public extension Tensor {
 // Scalar Conversion
 //===------------------------------------------------------------------------------------------===//
 
-public extension Tensor {
+extension Tensor {
     /// Returns `true` if `rank` is equal to 0 and `false` otherwise.
     @inlinable
-    var isScalar: Bool {
+    public var isScalar: Bool {
         return rank == 0
     }
 
     /// Returns the single scalar element if `rank` is equal to 0 and `nil`
     /// otherwise.
     @inlinable
-    var scalar: Scalar? {
+    public var scalar: Scalar? {
         return handle.makeHostCopy().scalar
     }
 
@@ -126,24 +126,25 @@ public extension Tensor {
     /// - Precondition: The tensor has exactly one scalar.
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    func scalarized() -> Scalar {
-        precondition(shape.contiguousSize == 1,
-           "This tensor must have exactly one scalar but contains \(shape.contiguousSize).")
+    public func scalarized() -> Scalar {
+        precondition(
+            shape.contiguousSize == 1,
+            "This tensor must have exactly one scalar but contains \(shape.contiguousSize).")
         return reshaped(to: []).scalar!
     }
 }
 
-internal extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: scalarized)
+    @derivative(of:scalarized)
     func _vjpScalarized() -> (value: Scalar, pullback: (Scalar) -> Tensor) {
         return (scalarized(), { v in Tensor(v) })
     }
 }
 
-public extension TensorFlowScalar {
+extension TensorFlowScalar {
     @inlinable
-    init?(_ tensor: Tensor<Self>) {
+    public init?(_ tensor: Tensor<Self>) {
         guard let scalar = tensor.scalar else {
             return nil
         }
@@ -155,27 +156,30 @@ public extension TensorFlowScalar {
 // Array Conversion
 //===------------------------------------------------------------------------------------------===//
 
-public extension Tensor {
+extension Tensor {
     @inlinable
-    var array: ShapedArray<Scalar> {
+    public var array: ShapedArray<Scalar> {
         debugLog("Returning a host copy of array.")
         return handle.makeHostCopy()
     }
 
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    var scalars: [Scalar] {
+    public var scalars: [Scalar] {
         return array.scalars
     }
 }
 
 extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: scalars)
+    @derivative(of:scalars)
     func _vjpScalars() -> (value: [Scalar], pullback: (Array<Scalar>.TangentVector) -> Tensor) {
-        (value: scalars, pullback: { [shape = self.shape, device = self.device] v in
-            Tensor(shape: shape, scalars: v.base, on: device)
-        })
+        (
+            value: scalars,
+            pullback: { [shape = self.shape, device = self.device] v in
+                Tensor(shape: shape, scalars: v.base, on: device)
+            }
+        )
     }
 }
 
@@ -183,18 +187,18 @@ extension Tensor where Scalar: TensorFlowFloatingPoint {
 // Initialization
 //===------------------------------------------------------------------------------------------===//
 
-public extension Tensor {
+extension Tensor {
     /// Creates a 0-D tensor from a scalar value.
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    init(_ value: Scalar, on device: Device = .default) {
+    public init(_ value: Scalar, on device: Device = .default) {
         self.init(shape: [], scalars: [value], on: device)
     }
 }
 
-internal extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: init(_:on:))
+    @derivative(of:init(_:on:))
     static func _vjpScalarInit(_ value: __owned Scalar, on device: Device = .default) -> (
         value: Tensor, pullback: (Tensor) -> Scalar
     ) {
@@ -202,17 +206,17 @@ internal extension Tensor where Scalar: TensorFlowFloatingPoint {
     }
 }
 
-public extension Tensor {
+extension Tensor {
     /// Creates a 1D tensor from scalars.
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    init(_ scalars: [Scalar], on device: Device = .default) {
+    public init(_ scalars: [Scalar], on device: Device = .default) {
         self.init(shape: [scalars.count], scalars: scalars, on: device)
     }
 
     /// Creates a 1D tensor from scalars.
     @inlinable
-    init<C: RandomAccessCollection>(
+    public init<C: RandomAccessCollection>(
         _ vector: C, on device: Device = .default
     ) where C.Element == Scalar {
         let handle = TensorHandle<Scalar>(
@@ -235,8 +239,9 @@ public extension Tensor {
     /// - Precondition: The product of the dimensions of the shape must equal the number of scalars.
     @inlinable
     @differentiable(where Scalar: TensorFlowFloatingPoint)
-    init(shape: TensorShape, scalars: [Scalar], on device: Device = .default) {
-        precondition(shape.contiguousSize == scalars.count,
+    public init(shape: TensorShape, scalars: [Scalar], on device: Device = .default) {
+        precondition(
+            shape.contiguousSize == scalars.count,
             """
             The shape requires \(shape.contiguousSize) scalars but \(scalars.count) were \
             provided.
@@ -253,12 +258,13 @@ public extension Tensor {
     ///   - scalars: The scalar contents of the tensor.
     /// - Precondition: The product of the dimensions of the shape must equal the number of scalars.
     @inlinable
-    init(
+    public init(
         shape: TensorShape,
         scalars: UnsafeBufferPointer<Scalar>,
         on device: Device = .default
     ) {
-        precondition(shape.contiguousSize == scalars.count,
+        precondition(
+            shape.contiguousSize == scalars.count,
             """
             The shape requires \(shape.contiguousSize) scalars but \(scalars.count) were \
             provided.
@@ -278,10 +284,11 @@ public extension Tensor {
     ///   - scalars: The scalar contents of the tensor.
     /// - Precondition: The product of the dimensions of the shape must equal the number of scalars.
     @inlinable
-    init<C: RandomAccessCollection>(
+    public init<C: RandomAccessCollection>(
         shape: TensorShape, scalars: C, on device: Device = .default
     ) where C.Element == Scalar {
-        precondition(shape.contiguousSize == scalars.count,
+        precondition(
+            shape.contiguousSize == scalars.count,
             """
             The shape requires \(shape.contiguousSize) scalars but \(scalars.count) were \
             provided.
@@ -301,23 +308,29 @@ public extension Tensor {
 
 extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: init(_:on:))
+    @derivative(of:init(_:on:))
     static func _vjpInit(_ scalars: [Scalar], on device: Device = .default) -> (
         value: Tensor, pullback: (Tensor) -> Array<Scalar>.TangentVector
     ) {
-        (value: Tensor(scalars, on: device), pullback: { v in
-            Array<Scalar>.TangentVector(v.scalars)
-        })
+        (
+            value: Tensor(scalars, on: device),
+            pullback: { v in
+                Array<Scalar>.TangentVector(v.scalars)
+            }
+        )
     }
 
     @inlinable
-    @derivative(of: init(shape:scalars:on:))
+    @derivative(of:init(shape:scalars:on:))
     static func _vjpInit(
         shape: TensorShape, scalars: [Scalar], on device: Device = .default
     ) -> (value: Tensor, pullback: (Tensor) -> Array<Scalar>.TangentVector) {
-        (value: Tensor(scalars, on: device), pullback: { v in
-            Array<Scalar>.TangentVector(v.scalars)
-        })
+        (
+            value: Tensor(scalars, on: device),
+            pullback: { v in
+                Array<Scalar>.TangentVector(v.scalars)
+            }
+        )
     }
 }
 
@@ -372,8 +385,9 @@ public struct _TensorElementLiteral<Scalar> where Scalar: TensorFlowScalar {
 }
 
 extension _TensorElementLiteral: ExpressibleByBooleanLiteral
-    where Scalar: ExpressibleByBooleanLiteral {
+where Scalar: ExpressibleByBooleanLiteral {
     public typealias BooleanLiteralType = Scalar.BooleanLiteralType
+
     @inlinable
     public init(booleanLiteral: BooleanLiteralType) {
         tensor = Tensor(Scalar(booleanLiteral: booleanLiteral))
@@ -381,8 +395,9 @@ extension _TensorElementLiteral: ExpressibleByBooleanLiteral
 }
 
 extension _TensorElementLiteral: ExpressibleByIntegerLiteral
-    where Scalar: ExpressibleByIntegerLiteral {
+where Scalar: ExpressibleByIntegerLiteral {
     public typealias IntegerLiteralType = Scalar.IntegerLiteralType
+
     @inlinable
     public init(integerLiteral: IntegerLiteralType) {
         tensor = Tensor(Scalar(integerLiteral: integerLiteral))
@@ -390,8 +405,9 @@ extension _TensorElementLiteral: ExpressibleByIntegerLiteral
 }
 
 extension _TensorElementLiteral: ExpressibleByFloatLiteral
-    where Scalar: ExpressibleByFloatLiteral {
+where Scalar: ExpressibleByFloatLiteral {
     public typealias FloatLiteralType = Scalar.FloatLiteralType
+
     @inlinable
     public init(floatLiteral: FloatLiteralType) {
         tensor = Tensor(Scalar(floatLiteral: floatLiteral))
@@ -400,6 +416,7 @@ extension _TensorElementLiteral: ExpressibleByFloatLiteral
 
 extension _TensorElementLiteral: ExpressibleByArrayLiteral {
     public typealias ArrayLiteralElement = _TensorElementLiteral<Scalar>
+
     @inlinable
     public init(arrayLiteral elements: _TensorElementLiteral<Scalar>...) {
         tensor = _Raw.pack(elements.map { $0.tensor })
@@ -465,7 +482,7 @@ extension Tensor: CustomStringConvertible {
     }
 }
 
-public extension Tensor {
+extension Tensor {
     /// A textual representation of the tensor. Returns a summarized description if `summarize` is
     /// true and the element count exceeds twice the `edgeElementCount`.
     ///
@@ -476,7 +493,7 @@ public extension Tensor {
     ///     via ellipses (`...`).
     ///   - summarizing: If true, summarize description if element count exceeds twice
     ///     `edgeElementCount`.
-    func description(
+    public func description(
         lineWidth: Int = 80,
         edgeElementCount: Int = 3,
         summarizing: Bool = false
@@ -489,7 +506,7 @@ public extension Tensor {
 
     /// A full, non-pretty-printed textual representation of the tensor, showing
     /// all scalars.
-    var fullDescription: String {
+    public var fullDescription: String {
         @_semantics("autodiff.nonvarying")
         get {
             return array.fullDescription
@@ -562,33 +579,43 @@ extension Tensor: AdditiveArithmetic where Scalar: Numeric {
     }
 }
 
-internal extension Tensor where Scalar: TensorFlowFloatingPoint {
+extension Tensor where Scalar: TensorFlowFloatingPoint {
     @inlinable
-    @derivative(of: +)
+    @derivative(of:+)
     static func _vjpAdd(lhs: Tensor, rhs: Tensor) -> (
         value: Tensor, pullback: (Tensor) -> (Tensor, Tensor)
     ) {
-        (lhs + rhs, { [lhsShape = lhs.shapeTensor, rhsShape = rhs.shapeTensor] v in
-            let lhsGrad = v
-            let rhsGrad = lhsGrad
-            let (lhsAxes, rhsAxes) = _Raw.broadcastGradientArgs(s0: lhsShape, s1: rhsShape)
-            return (lhsGrad.sum(squeezingAxes: lhsAxes).reshaped(toShape: lhsShape),
-                    rhsGrad.sum(squeezingAxes: rhsAxes).reshaped(toShape: rhsShape))
-        })
+        (
+            lhs + rhs,
+            { [lhsShape = lhs.shapeTensor, rhsShape = rhs.shapeTensor] v in
+                let lhsGrad = v
+                let rhsGrad = lhsGrad
+                let (lhsAxes, rhsAxes) = _Raw.broadcastGradientArgs(s0: lhsShape, s1: rhsShape)
+                return (
+                    lhsGrad.sum(squeezingAxes: lhsAxes).reshaped(toShape: lhsShape),
+                    rhsGrad.sum(squeezingAxes: rhsAxes).reshaped(toShape: rhsShape)
+                )
+            }
+        )
     }
 
     @inlinable
-    @derivative(of: -)
+    @derivative(of:-)
     static func _vjpSubtract(lhs: Tensor, rhs: Tensor) -> (
         value: Tensor, pullback: (Tensor) -> (Tensor, Tensor)
     ) {
-        (lhs - rhs, { [lhsShape = lhs.shapeTensor, rhsShape = rhs.shapeTensor] v in
-            let lhsGrad = v
-            let rhsGrad = -lhsGrad
-            let (lhsAxes, rhsAxes) = _Raw.broadcastGradientArgs(s0: lhsShape, s1: rhsShape)
-            return (lhsGrad.sum(squeezingAxes: lhsAxes).reshaped(toShape: lhsShape),
-                    rhsGrad.sum(squeezingAxes: rhsAxes).reshaped(toShape: rhsShape))
-        })
+        (
+            lhs - rhs,
+            { [lhsShape = lhs.shapeTensor, rhsShape = rhs.shapeTensor] v in
+                let lhsGrad = v
+                let rhsGrad = -lhsGrad
+                let (lhsAxes, rhsAxes) = _Raw.broadcastGradientArgs(s0: lhsShape, s1: rhsShape)
+                return (
+                    lhsGrad.sum(squeezingAxes: lhsAxes).reshaped(toShape: lhsShape),
+                    rhsGrad.sum(squeezingAxes: rhsAxes).reshaped(toShape: rhsShape)
+                )
+            }
+        )
     }
 }
 

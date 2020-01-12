@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
-import Darwin
-#elseif os(Windows)
-import ucrt
-#else
-import Glibc
-#endif
-
 import CTensorFlow
+
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+    import Darwin
+#elseif os(Windows)
+    import ucrt
+#else
+    import Glibc
+#endif
 
 //===------------------------------------------------------------------------------------------===//
 // Runtime Checkers
@@ -108,8 +108,8 @@ internal typealias CTFETraceContext = OpaquePointer
 //===------------------------------------------------------------------------------------------===//
 
 #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
-@usableFromInline internal let stderr = __stderrp
-@usableFromInline internal  let stdout = __stdoutp
+    @usableFromInline internal let stderr = __stderrp
+    @usableFromInline internal let stdout = __stdoutp
 #endif
 
 /// Log to standard error.

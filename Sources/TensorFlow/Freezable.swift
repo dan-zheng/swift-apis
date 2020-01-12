@@ -37,11 +37,14 @@ public struct _Freezable<Value: Differentiable> {
     }
 
     @usableFromInline
-    @derivative(of: wrappedValue)
+    @derivative(of:wrappedValue)
     func _vjpValue() -> (value: Value, pullback: (Value.TangentVector) -> TangentVector) {
-        return (_value, { [isFrozen = self.isFrozen] v in
-            isFrozen ? .zero : v
-        })
+        return (
+            _value,
+            { [isFrozen = self.isFrozen] v in
+                isFrozen ? .zero : v
+            }
+        )
     }
 }
 
@@ -60,6 +63,7 @@ extension _Freezable {
 
 extension _Freezable: Differentiable {
     public typealias TangentVector = Value.TangentVector
+
     public mutating func move(along direction: TangentVector) {
         _value.move(along: direction)
     }
@@ -67,6 +71,6 @@ extension _Freezable: Differentiable {
 
 extension _Freezable: EuclideanDifferentiable where Value: EuclideanDifferentiable {
     public var differentiableVectorView: TangentVector {
-         return _value.differentiableVectorView
+        return _value.differentiableVectorView
     }
 }

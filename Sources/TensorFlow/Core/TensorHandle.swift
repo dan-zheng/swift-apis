@@ -144,10 +144,12 @@ extension TensorHandle where Scalar: TensorFlowScalar {
     ) {
         let contiguousSize = shape.reduce(1, *)
         let byteCount = contiguousSize * MemoryLayout<Scalar>.stride
-        self.init(shape: shape, byteCount: byteCount, bufferInitializer: { buffer in
-            let pointer = buffer.bindMemory(to: Scalar.self, capacity: contiguousSize)
-            scalarsInitializer(pointer)
-        })
+        self.init(
+            shape: shape, byteCount: byteCount,
+            bufferInitializer: { buffer in
+                let pointer = buffer.bindMemory(to: Scalar.self, capacity: contiguousSize)
+                scalarsInitializer(pointer)
+            })
     }
 }
 
@@ -167,7 +169,7 @@ extension TensorHandle {
     }
 }
 
-internal extension TensorHandle {
+extension TensorHandle {
     /// Create a `ShapedArray` with contents of the underlying `TensorHandle`. If the `TensorHandle`
     /// is on the accelerator, it will be copied to the host.
     /// - Returns: A `ShapedArray`.
@@ -218,7 +220,7 @@ public struct VariantHandle {
 //===------------------------------------------------------------------------------------------===//
 
 // TF Tensor-specific initializer.
-internal class CTensorTensorBuffer<Scalar> : TensorBuffer<Scalar> {
+internal class CTensorTensorBuffer<Scalar>: TensorBuffer<Scalar> {
     let cTensor: CTensor
 
     /// Creates a local tensor buffer from a C `TF_Tensor*` value and takes ownership of the value.
@@ -253,7 +255,7 @@ internal class CTensorTensorBuffer<Scalar> : TensorBuffer<Scalar> {
     }
 }
 
-internal extension ShapedArray where Scalar: _TensorFlowDataTypeCompatible {
+extension ShapedArray where Scalar: _TensorFlowDataTypeCompatible {
     @usableFromInline
     init(owning cTensor: CTensor) {
         // Including \(Scalar.self) into the message would cause non-deterministic crashes.
@@ -286,8 +288,8 @@ internal extension ShapedArray where Scalar: _TensorFlowDataTypeCompatible {
 }
 
 // Tensor conversion.
-public extension Tensor {
-    init(_ array: __owned ShapedArray<Scalar>) {
+extension Tensor {
+    public init(_ array: __owned ShapedArray<Scalar>) {
         precondition(
             array.rank <= Int(Int32.max),
             "Conversion to TensorHandle is undefined when rank exceeds `Int32.max`.")

@@ -20,6 +20,7 @@ class LazyTensorHandle: _AnyTensorHandle {
         /// Bool indicates if this concrete TFETensorhandle was a result of
         /// materialization.
         case concrete(TFETensorHandle, materialized: Bool)
+
         /// Bool indicates whether this is a live tensor. This flag is used to
         /// heuristically determine whether this symbolic tensor should also be
         /// materialized whenever materialization of any other tensor is triggered.
@@ -80,7 +81,8 @@ class LazyTensorHandle: _AnyTensorHandle {
         get {
             switch handle {
             case .symbolic(let op, let index, _):
-                precondition(LazyTensorContext.local.isShapeTrackingEnabled,
+                precondition(
+                    LazyTensorContext.local.isShapeTrackingEnabled,
                     "Shape tracking is not enabled in this context.")
                 if let shape = op.outputShapes[index] { return shape }
                 // Materialize and get the shape from concrete tensor handle.
@@ -107,18 +109,18 @@ class LazyTensorHandle: _AnyTensorHandle {
 
     static func forEachLiveOperation(
         _ perform: (LazyTensorOperation) throws -> Void
-    ) rethrows -> Void {
+    ) rethrows {
         try LazyTensorContext.local.operationsTracker.forEachLiveOperation(perform)
     }
 
     static func forEachOperation(
         _ perform: (LazyTensorOperation) throws -> Void
-    ) rethrows -> Void {
+    ) rethrows {
         try LazyTensorContext.local.operationsTracker.forEachOperation(perform)
     }
 
     @usableFromInline
-    static var _materializationCallback: (String) -> () = { _ in }
+    static var _materializationCallback: (String) -> Void = { _ in }
 }
 
 extension _AnyTensorHandle {
@@ -173,7 +175,7 @@ extension ResourceHandle {
 }
 
 class LazyTensorOperation: TensorOperation {
-     typealias TensorValueHandle = LazyTensorHandle
+    typealias TensorValueHandle = LazyTensorHandle
 
     enum Input {
         case single(LazyTensorHandle)
@@ -217,7 +219,8 @@ class LazyTensorOperation: TensorOperation {
     }
 
     func outputName(at index: Int) -> String {
-        precondition(index < outputCount,
+        precondition(
+            index < outputCount,
             "Output index out of bounds when getting outputName.")
         let ssaID = id ?? "\(ObjectIdentifier(self))"
         var ssaName = "%\(ssaID)"
@@ -271,49 +274,62 @@ class LazyTensorOperation: TensorOperation {
         }
     }
 
-    func addInput(_ input : LazyTensorHandle) {
+    func addInput(_ input: LazyTensorHandle) {
         inputs.append(Input.single(input))
     }
 
     func updateAttribute(_ name: String, _ value: Bool) {
         attributes[name] = Attribute.boolValue(value)
     }
+
     func updateAttribute(_ name: String, _ value: Int) {
         attributes[name] = Attribute.intValue(value)
     }
+
     func updateAttribute(_ name: String, _ value: Int32) {
         attributes[name] = Attribute.intValue(Int(value))
     }
+
     func updateAttribute(_ name: String, _ value: Int64) {
         attributes[name] = Attribute.intValue(Int(value))
     }
+
     func updateAttribute(_ name: String, _ value: Float) {
         attributes[name] = Attribute.floatValue(value)
     }
+
     func updateAttribute(_ name: String, _ value: Double) {
         attributes[name] = Attribute.doubleValue(value)
     }
+
     func updateAttribute(_ name: String, _ value: String) {
         attributes[name] = Attribute.stringValue(value)
     }
+
     func updateAttribute(_ name: String, _ value: [Bool]) {
         attributes[name] = Attribute.boolArray(value)
     }
+
     func updateAttribute(_ name: String, _ value: [Int]) {
         attributes[name] = Attribute.intArray(value)
     }
+
     func updateAttribute(_ name: String, _ value: [Int32]) {
         attributes[name] = Attribute.intArray(value.map { Int($0) })
     }
+
     func updateAttribute(_ name: String, _ value: [Int64]) {
         attributes[name] = Attribute.intArray(value.map { Int($0) })
     }
+
     func updateAttribute(_ name: String, _ value: [Float]) {
         attributes[name] = Attribute.floatArray(value)
     }
+
     func updateAttribute(_ name: String, _ value: [Double]) {
         attributes[name] = Attribute.doubleArray(value)
     }
+
     func updateAttribute(_ name: String, _ value: [String]) {
         attributes[name] = Attribute.stringArray(value)
     }
@@ -323,7 +339,8 @@ extension LazyTensorOperation: TFTensorOperation {
     private func lazyTensorHandle(_ input: _AnyTensorHandle) -> LazyTensorHandle {
         if let lazyHandle = input as? LazyTensorHandle {
             if case let LazyTensorHandle.Handle.symbolic(
-                op, index, true) = lazyHandle.handle {
+                op, index, true) = lazyHandle.handle
+            {
                 // We turn off liveness for the constructed LazyTensorHandle,
                 // because it is only referenced internally as a part
                 // of the LazyTensorOperation input.
@@ -364,30 +381,38 @@ extension LazyTensorOperation: TFTensorOperation {
     func updateAttribute(_ name: String, _ value: TensorDataType) {
         attributes[name] = Attribute.tensorDataTypeValue(value)
     }
+
     func updateAttribute(_ name: String, _ value: TensorShape) {
         attributes[name] = Attribute.optionalTensorShape(value)
     }
+
     func updateAttribute(_ name: String, _ value: TensorShape?) {
         attributes[name] = Attribute.optionalTensorShape(value)
     }
+
     func updateAttribute(_ name: String, _ value: [TensorDataType]) {
         attributes[name] = Attribute.tensorDataTypeArray(value)
     }
+
     func updateAttribute(_ name: String, _ value: [TensorShape]) {
         attributes[name] = Attribute.optionalTensorShapeArray(value)
     }
+
     func updateAttribute(_ name: String, _ value: [TensorShape?]) {
         attributes[name] = Attribute.optionalTensorShapeArray(value)
     }
+
     func updateAttribute(_ name: String, _ value: _TensorFunctionPointer) {
         attributes[name] = Attribute.tensorFunctionPointer(value)
     }
+
     func updateAttribute(_ name: String, _ value: TFETensorHandle) {
         attributes[name] = Attribute.constTensor(value)
     }
 
     func updateAttribute<In: TensorGroup, Out: TensorGroup>(
-        _ name: String, _ value: (In) -> Out) {
+        _ name: String, _ value: (In) -> Out
+    ) {
         updateAttribute(name, _TensorFunctionPointer(name: _tffunc(value)))
     }
 
@@ -396,7 +421,7 @@ extension LazyTensorOperation: TFTensorOperation {
         // For the time-being, just build a TFE_Op and run it.
         //
         // Collect all the unmaterialized inputs.
-        var unmaterializedInputs = Array<LazyTensorOperation>()
+        var unmaterializedInputs = [LazyTensorOperation]()
         unmaterializedInputs.reserveCapacity(inputs.count)
         for input in inputs {
             switch input {
@@ -453,8 +478,7 @@ extension LazyTensorOperation: TFTensorOperation {
     ) -> (T0) {
         let outputs = evaluate()
         let offset0 = 0
-        let result = (
-            T0.init(_handles: outputs[offset0..<count0]))
+        let result = (T0.init(_handles: outputs[offset0..<count0]))
         return result
     }
 
@@ -467,7 +491,8 @@ extension LazyTensorOperation: TFTensorOperation {
         let offset1 = offset0 + count0
         let result = (
             T0.init(_handles: outputs[offset0..<offset1]),
-            T1.init(_handles: outputs[offset1..<outputs.count]))
+            T1.init(_handles: outputs[offset1..<outputs.count])
+        )
         return result
     }
 
@@ -483,11 +508,15 @@ extension LazyTensorOperation: TFTensorOperation {
         let result = (
             T0.init(_handles: outputs[offset0..<offset1]),
             T1.init(_handles: outputs[offset1..<offset2]),
-            T2.init(_handles: outputs[offset2..<outputs.count]))
+            T2.init(_handles: outputs[offset2..<outputs.count])
+        )
         return result
     }
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -502,11 +531,15 @@ extension LazyTensorOperation: TFTensorOperation {
             T0.init(_handles: outputs[offset0..<offset1]),
             T1.init(_handles: outputs[offset1..<offset2]),
             T2.init(_handles: outputs[offset2..<offset3]),
-            T3.init(_handles: outputs[offset3..<outputs.count]))
+            T3.init(_handles: outputs[offset3..<outputs.count])
+        )
         return result
     }
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -524,11 +557,15 @@ extension LazyTensorOperation: TFTensorOperation {
             T1.init(_handles: outputs[offset1..<offset2]),
             T2.init(_handles: outputs[offset2..<offset3]),
             T3.init(_handles: outputs[offset3..<offset4]),
-            T4.init(_handles: outputs[offset4..<outputs.count]))
+            T4.init(_handles: outputs[offset4..<outputs.count])
+        )
         return result
     }
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -549,11 +586,16 @@ extension LazyTensorOperation: TFTensorOperation {
             T2.init(_handles: outputs[offset2..<offset3]),
             T3.init(_handles: outputs[offset3..<offset4]),
             T4.init(_handles: outputs[offset4..<offset5]),
-            T5.init(_handles: outputs[offset5..<outputs.count]))
+            T5.init(_handles: outputs[offset5..<outputs.count])
+        )
         return result
     }
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol, T6: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol,
+        T6: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -577,11 +619,16 @@ extension LazyTensorOperation: TFTensorOperation {
             T3.init(_handles: outputs[offset3..<offset4]),
             T4.init(_handles: outputs[offset4..<offset5]),
             T5.init(_handles: outputs[offset5..<offset6]),
-            T6.init(_handles: outputs[offset6..<outputs.count]))
+            T6.init(_handles: outputs[offset6..<outputs.count])
+        )
         return result
     }
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol, T6: TensorArrayProtocol, T7: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol,
+        T6: TensorArrayProtocol, T7: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -608,11 +655,16 @@ extension LazyTensorOperation: TFTensorOperation {
             T4.init(_handles: outputs[offset4..<offset5]),
             T5.init(_handles: outputs[offset5..<offset6]),
             T6.init(_handles: outputs[offset6..<offset7]),
-            T7.init(_handles: outputs[offset7..<outputs.count]))
+            T7.init(_handles: outputs[offset7..<outputs.count])
+        )
         return result
     }
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol, T6: TensorArrayProtocol, T7: TensorArrayProtocol, T8: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol,
+        T6: TensorArrayProtocol, T7: TensorArrayProtocol, T8: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -642,11 +694,17 @@ extension LazyTensorOperation: TFTensorOperation {
             T5.init(_handles: outputs[offset5..<offset6]),
             T6.init(_handles: outputs[offset6..<offset7]),
             T7.init(_handles: outputs[offset7..<offset8]),
-            T8.init(_handles: outputs[offset8..<outputs.count]))
-    return result
+            T8.init(_handles: outputs[offset8..<outputs.count])
+        )
+        return result
     }
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol, T6: TensorArrayProtocol, T7: TensorArrayProtocol, T8: TensorArrayProtocol, T9: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol,
+        T6: TensorArrayProtocol, T7: TensorArrayProtocol, T8: TensorArrayProtocol,
+        T9: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -679,7 +737,8 @@ extension LazyTensorOperation: TFTensorOperation {
             T6.init(_handles: outputs[offset6..<offset7]),
             T7.init(_handles: outputs[offset7..<offset8]),
             T8.init(_handles: outputs[offset8..<offset9]),
-            T9.init(_handles: outputs[offset9..<outputs.count]))
+            T9.init(_handles: outputs[offset9..<outputs.count])
+        )
         return result
     }
 }
@@ -723,7 +782,7 @@ extension TFETensorHandle {
     }
 
     static func tfDataTypeAsString(_ cDataType: TF_DataType) -> String {
-        switch(cDataType) {
+        switch cDataType {
         case TF_FLOAT: return "float"
         case TF_DOUBLE: return "double"
         case TF_INT32: return "int32"
@@ -855,7 +914,8 @@ extension LazyTensorOperation {
         func materializedAsNeeded(lazyTensor: LazyTensorHandle) -> LazyTensorHandle {
             let handle = lazyTensor.handle
             if case let .symbolic(lazyOp, index, _) = handle,
-                let outputs = lazyOp.outputs {
+                let outputs = lazyOp.outputs
+            {
                 return LazyTensorHandle(_materialized: outputs[index])
             }
             return lazyTensor

@@ -48,8 +48,10 @@ extension LazyTensorTrace: CustomStringConvertible {
 struct MaterializationTraceInfo {
     /// The operations that need to be materialized. These correspond to the outputs of `trace`.
     let lazyOperations: [LazyTensorOperation]
+
     /// Specification of the trace that can be evalaute to materialize `lazyOperations`.
     let trace: LazyTensorTrace
+
     /// Concrete tensor values for evaluating `trace`.
     let concreteInputs: [TFETensorHandle]
 }
@@ -136,13 +138,16 @@ class LazyTensorTraceBuilder {
 
     // inputs will be "placeholder" nodes.
     private var inputs: [LazyTensorOperation] = []
+
     private var inputValues: [TFETensorHandle] = []
     private var operations: [LazyTensorOperation] = []
     private var outputs: [LazyTensorOperation] = []
     private var originalOutputs: [LazyTensorOperation] = []
     private var lazyOpsCache: [ObjectIdentifier: LazyTensorOperation] = [:]
+
     /// A flag that controls promotion of constants to inputs.
     private var neverPromoteConstants: Bool = false
+
     /// A flag that controls whether outputs should be automatically generated.
     private var generateOutputs: Bool = true
 
@@ -161,7 +166,8 @@ class LazyTensorTraceBuilder {
         let dtypeAttr = LazyTensorOperation.Attribute.tensorDataTypeValue(dtype)
         result.attributes = [
             "dtype": dtypeAttr,
-            "value": LazyTensorOperation.Attribute.constTensor(handle)]
+            "value": LazyTensorOperation.Attribute.constTensor(handle)
+        ]
         updateOperationAndCache(ObjectIdentifier(handle), result)
         return LazyTensorHandle(_lazy: result, index: 0)
     }

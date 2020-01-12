@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #if !COMPILING_TENSORFLOW_STDLIB_MODULE
-import Tensor
+    import Tensor
 #endif
 
 public typealias ParameterInitializer<Scalar: TensorFlowScalar> = (TensorShape) -> Tensor<Scalar>

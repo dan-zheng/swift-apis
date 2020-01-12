@@ -16,6 +16,7 @@
 /// into the runtime.
 public struct _TensorFunctionPointer: Equatable {
     public var name: String
+
     public init(name: String) {
         self.name = name
     }
@@ -87,14 +88,20 @@ public protocol TFTensorOperation: TensorOperation {
         _ count2: Int
     ) -> (T0, T1, T2)
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
         _ count3: Int
     ) -> (T0, T1, T2, T3)
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -102,7 +109,10 @@ public protocol TFTensorOperation: TensorOperation {
         _ count4: Int
     ) -> (T0, T1, T2, T3, T4)
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -111,7 +121,11 @@ public protocol TFTensorOperation: TensorOperation {
         _ count5: Int
     ) -> (T0, T1, T2, T3, T4, T5)
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol, T6: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol,
+        T6: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -121,7 +135,11 @@ public protocol TFTensorOperation: TensorOperation {
         _ count6: Int
     ) -> (T0, T1, T2, T3, T4, T5, T6)
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol, T6: TensorArrayProtocol, T7: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol,
+        T6: TensorArrayProtocol, T7: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -132,7 +150,11 @@ public protocol TFTensorOperation: TensorOperation {
         _ count7: Int
     ) -> (T0, T1, T2, T3, T4, T5, T6, T7)
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol, T6: TensorArrayProtocol, T7: TensorArrayProtocol, T8: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol,
+        T6: TensorArrayProtocol, T7: TensorArrayProtocol, T8: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -144,7 +166,12 @@ public protocol TFTensorOperation: TensorOperation {
         _ count8: Int
     ) -> (T0, T1, T2, T3, T4, T5, T6, T7, T8)
 
-    func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol, T6: TensorArrayProtocol, T7: TensorArrayProtocol, T8: TensorArrayProtocol, T9: TensorArrayProtocol>(
+    func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol,
+        T6: TensorArrayProtocol, T7: TensorArrayProtocol, T8: TensorArrayProtocol,
+        T9: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,

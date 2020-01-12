@@ -18,10 +18,13 @@
 public protocol Optimizer {
     /// The type of the model whose parameters are optimized.
     associatedtype Model: Differentiable
+
     /// The scalar parameter type.
     associatedtype Scalar: FloatingPoint
+
     /// The learning rate.
     var learningRate: Scalar { get set }
+
     /// Updates the specified differentiable variables along the specified direction.
     mutating func update(_ variables: inout Model, along direction: Model.TangentVector)
 }

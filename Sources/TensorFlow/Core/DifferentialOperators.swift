@@ -16,57 +16,77 @@
 // Method-style differential operators
 //===------------------------------------------------------------------------------------------===//
 
-public extension Differentiable {
-    @available(*, deprecated, message: """
+extension Differentiable {
+    @available(
+        *, deprecated,
+        message:
+            """
         Method-style differential operators are deprecated and will be removed; use top-level \
         function 'TensorFlow.gradient(at:in:)' instead
-        """)
+        """
+    )
     @inlinable
-    func gradient<R: TensorFlowFloatingPoint>(
+    public func gradient<R: TensorFlowFloatingPoint>(
         in f: @differentiable (Self) -> Tensor<R>
     ) -> TangentVector {
         return self.valueWithGradient(in: f).1
     }
 
-    @available(*, deprecated, message: """
+    @available(
+        *, deprecated,
+        message:
+            """
         Method-style differential operators are deprecated and will be removed; use top-level \
         function 'TensorFlow.valueWithGradient(at:in:)' instead
-        """)
+        """
+    )
     @inlinable
-    func valueWithGradient<R: TensorFlowFloatingPoint>(
+    public func valueWithGradient<R: TensorFlowFloatingPoint>(
         in f: @differentiable (Self) -> Tensor<R>
     ) -> (value: Tensor<R>, gradient: TangentVector) {
         let (y, pb) = self.valueWithPullback(in: f)
-        precondition(y.rank == 0, """
+        precondition(
+            y.rank == 0,
+            """
             The function being differentiated produced a tensor with shape \(y.shape). \
             You can only compute the gradient of functions that return scalar values.
             """)
         return (y, pb(Tensor<R>(1)))
     }
 
-    @available(*, deprecated, message: """
+    @available(
+        *, deprecated,
+        message:
+            """
         Method-style differential operators are deprecated and will be removed; use top-level \
         function 'TensorFlow.gradient(at:_:in:)' instead
-        """)
+        """
+    )
     @inlinable
-    func gradient<T: Differentiable, R: TensorFlowFloatingPoint>(
+    public func gradient<T: Differentiable, R: TensorFlowFloatingPoint>(
         at x: T,
         in f: @differentiable (Self, T) -> Tensor<R>
     ) -> (TangentVector, T.TangentVector) {
         return self.valueWithGradient(at: x, in: f).1
     }
 
-    @available(*, deprecated, message: """
+    @available(
+        *, deprecated,
+        message:
+            """
         Method-style differential operators are deprecated and will be removed; use top-level \
         function 'TensorFlow.valueWithGradient(at:_:in:)' instead
-        """)
+        """
+    )
     @inlinable
-    func valueWithGradient<T: Differentiable, R: TensorFlowFloatingPoint>(
+    public func valueWithGradient<T: Differentiable, R: TensorFlowFloatingPoint>(
         at x: T,
         in f: @differentiable (Self, T) -> Tensor<R>
     ) -> (value: Tensor<R>, gradient: (TangentVector, T.TangentVector)) {
         let (y, pb) = self.valueWithPullback(at: x, in: f)
-        precondition(y.rank == 0, """
+        precondition(
+            y.rank == 0,
+            """
             The function being differentiated produced a tensor with shape \(y.shape). \
             You can only compute the gradient of functions that return scalar values.
             """)
@@ -87,7 +107,9 @@ public func valueWithGradient<T, R>(
 ) -> (value: Tensor<R>, gradient: T.TangentVector)
 where T: Differentiable, R: TensorFlowFloatingPoint {
     let (y, pullback) = valueWithPullback(at: x, in: f)
-    precondition(y.rank == 0, """
+    precondition(
+        y.rank == 0,
+        """
         The function being differentiated produced a tensor with shape \(y.shape). \
         You can only compute the gradient of functions that return scalar values.
         """)
@@ -100,9 +122,11 @@ public func valueWithGradient<T, U, R>(
     _ y: U,
     in f: @differentiable (T, U) -> Tensor<R>
 ) -> (value: Tensor<R>, gradient: (T.TangentVector, U.TangentVector))
-    where T: Differentiable, U: Differentiable, R: TensorFlowFloatingPoint {
+where T: Differentiable, U: Differentiable, R: TensorFlowFloatingPoint {
     let (y, pullback) = valueWithPullback(at: x, y, in: f)
-    precondition(y.rank == 0, """
+    precondition(
+        y.rank == 0,
+        """
         The function being differentiated produced a tensor with shape \(y.shape). \
         You can only compute the gradient of functions that return scalar values.
         """)
@@ -116,10 +140,10 @@ public func valueWithGradient<T, U, V, R>(
     _ z: V,
     in f: @differentiable (T, U, V) -> Tensor<R>
 ) -> (value: Tensor<R>, gradient: (T.TangentVector, U.TangentVector, V.TangentVector))
-  where T: Differentiable, U: Differentiable, V: Differentiable, R: TensorFlowFloatingPoint {
-  let (y, pullback) = valueWithPullback(at: x, y, z, in: f)
-  precondition(y.rank == 0)
-  return (y, pullback(Tensor<R>(1)))
+where T: Differentiable, U: Differentiable, V: Differentiable, R: TensorFlowFloatingPoint {
+    let (y, pullback) = valueWithPullback(at: x, y, z, in: f)
+    precondition(y.rank == 0)
+    return (y, pullback(Tensor<R>(1)))
 }
 
 // Value with gradient (curried)
@@ -128,7 +152,7 @@ public func valueWithGradient<T, U, V, R>(
 public func valueWithGradient<T, R>(
     of f: @escaping @differentiable (T) -> Tensor<R>
 ) -> (T) -> (value: Tensor<R>, gradient: T.TangentVector)
-    where T: Differentiable, R: TensorFlowFloatingPoint {
+where T: Differentiable, R: TensorFlowFloatingPoint {
     return { x in valueWithGradient(at: x, in: f) }
 }
 
@@ -136,8 +160,8 @@ public func valueWithGradient<T, R>(
 public func valueWithGradient<T, U, R>(
     of f: @escaping @differentiable (T, U) -> Tensor<R>
 ) -> (T, U) -> (value: Tensor<R>, gradient: (T.TangentVector, U.TangentVector))
-  where T: Differentiable, U: Differentiable, R: TensorFlowFloatingPoint {
-  return { x, y in valueWithGradient(at: x, y, in: f) }
+where T: Differentiable, U: Differentiable, R: TensorFlowFloatingPoint {
+    return { x, y in valueWithGradient(at: x, y, in: f) }
 }
 
 @inlinable
@@ -145,9 +169,10 @@ public func valueWithGradient<T, U, V, R>(
     of f: @escaping @differentiable (T, U, V) -> Tensor<R>
 ) -> (T, U, V) -> (
     value: Tensor<R>,
-    gradient: (T.TangentVector, U.TangentVector, V.TangentVector))
-    where T: Differentiable, U: Differentiable, V: Differentiable, R: TensorFlowFloatingPoint {
-  return { x, y, z in valueWithGradient(at: x, y, z, in: f) }
+    gradient: (T.TangentVector, U.TangentVector, V.TangentVector)
+)
+where T: Differentiable, U: Differentiable, V: Differentiable, R: TensorFlowFloatingPoint {
+    return { x, y, z in valueWithGradient(at: x, y, z, in: f) }
 }
 
 // Gradient
@@ -166,7 +191,7 @@ public func gradient<T, U, R>(
     _ y: U,
     in f: @differentiable (T, U) -> Tensor<R>
 ) -> (T.TangentVector, U.TangentVector)
-    where T: Differentiable, U: Differentiable, R: TensorFlowFloatingPoint {
+where T: Differentiable, U: Differentiable, R: TensorFlowFloatingPoint {
     return valueWithGradient(at: x, y, in: f).1
 }
 
@@ -177,7 +202,7 @@ public func gradient<T, U, V, R>(
     _ z: V,
     in f: @differentiable (T, U, V) -> Tensor<R>
 ) -> (T.TangentVector, U.TangentVector, V.TangentVector)
-    where T: Differentiable, U: Differentiable, V: Differentiable, R: TensorFlowFloatingPoint {
+where T: Differentiable, U: Differentiable, V: Differentiable, R: TensorFlowFloatingPoint {
     return valueWithGradient(at: x, y, z, in: f).1
 }
 
@@ -194,7 +219,7 @@ public func gradient<T, R>(
 public func gradient<T, U, R>(
     of f: @escaping @differentiable (T, U) -> Tensor<R>
 ) -> (T, U) -> (T.TangentVector, U.TangentVector)
-    where T: Differentiable, U: Differentiable, R: TensorFlowFloatingPoint {
+where T: Differentiable, U: Differentiable, R: TensorFlowFloatingPoint {
     return { x, y in gradient(at: x, y, in: f) }
 }
 
@@ -202,6 +227,6 @@ public func gradient<T, U, R>(
 public func gradient<T, U, V, R>(
     of f: @escaping @differentiable (T, U, V) -> Tensor<R>
 ) -> (T, U, V) -> (T.TangentVector, U.TangentVector, V.TangentVector)
-    where T: Differentiable, U: Differentiable, V: Differentiable, R: TensorFlowFloatingPoint {
+where T: Differentiable, U: Differentiable, V: Differentiable, R: TensorFlowFloatingPoint {
     return { x, y, z in gradient(at: x, y, z, in: f) }
 }

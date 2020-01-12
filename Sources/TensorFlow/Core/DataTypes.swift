@@ -83,8 +83,10 @@ extension Int64: TensorFlowIndex {}
 ///   conforms `TensorFlowFloatingPoint`.
 public protocol TensorFlowFloatingPoint:
     TensorFlowScalar & BinaryFloatingPoint & Differentiable & ElementaryFunctions
-    where Self.RawSignificand: FixedWidthInteger,
-          Self == Self.TangentVector {}
+where
+    Self.RawSignificand: FixedWidthInteger,
+    Self == Self.TangentVector
+{}
 
 extension Float: TensorFlowFloatingPoint {}
 extension Double: TensorFlowFloatingPoint {}

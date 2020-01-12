@@ -13,11 +13,11 @@
 // limitations under the License.
 
 #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
-import Darwin
+    import Darwin
 #elseif os(Windows)
-import ucrt
+    import ucrt
 #else
-import Glibc
+    import Glibc
 #endif
 
 public typealias TensorFlowSeed = (graph: Int32, op: Int32)
@@ -93,8 +93,8 @@ public protocol SeedableRandomNumberGenerator: RandomNumberGenerator {
     init<T: BinaryInteger>(seed: T)
 }
 
-public extension SeedableRandomNumberGenerator {
-    init<T: BinaryInteger>(seed: T) {
+extension SeedableRandomNumberGenerator {
+    public init<T: BinaryInteger>(seed: T) {
         var newSeed: [UInt8] = []
         for i in 0..<seed.bitWidth / UInt8.bitWidth {
             newSeed.append(UInt8(truncatingIfNeeded: seed >> (UInt8.bitWidth * i)))
@@ -127,7 +127,7 @@ public struct ARC4RandomNumberGenerator: SeedableRandomNumberGenerator {
         precondition(seed.count > 0, "Length of seed must be positive")
         precondition(seed.count <= 256, "Length of seed must be at most 256")
         var j: UInt8 = 0
-        for i: UInt8 in 0...255 {
+        for i:UInt8 in 0...255 {
             j &+= S(i) &+ seed[Int(i) % seed.count]
             swapAt(i, j)
         }
@@ -181,8 +181,9 @@ public struct ThreefryRandomNumberGenerator: SeedableRandomNumberGenerator {
         uint64Seed: UInt64(time(nil))
     )
 
-    private let rot: (UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32)
-      = (13, 15, 26, 6, 17, 29, 16, 24)
+    private let rot: (UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32) = (
+        13, 15, 26, 6, 17, 29, 16, 24
+    )
 
     private func rotl32(value: UInt32, n: UInt32) -> UInt32 {
         return (value << (n & 31)) | (value >> ((32 - n) & 31))
@@ -192,7 +193,7 @@ public struct ThreefryRandomNumberGenerator: SeedableRandomNumberGenerator {
     private let key: UInt32x2
 
     private func random(forCtr ctr: UInt32x2, key: UInt32x2) -> UInt32x2 {
-        let skeinKsParity32: UInt32 = 0x1BD11BDA
+        let skeinKsParity32: UInt32 = 0x1BD1_1BDA
 
         let ks0 = key.0
         let ks1 = key.1
@@ -342,17 +343,18 @@ public struct PhiloxRandomNumberGenerator: SeedableRandomNumberGenerator {
     // Since we generate two 64-bit values at a time, we only need to run the
     // generator every other invocation.
     private var useNextValue = false
+
     private var nextValue: UInt64 = 0
 
     private func bump(key: UInt32x2) -> UInt32x2 {
-        let bumpConstantHi: UInt32 = 0x9E3779B9
-        let bumpConstantLo: UInt32 = 0xBB67AE85
+        let bumpConstantHi: UInt32 = 0x9E37_79B9
+        let bumpConstantLo: UInt32 = 0xBB67_AE85
         return (key.0 &+ bumpConstantHi, key.1 &+ bumpConstantLo)
     }
 
     private func round(ctr: UInt32x4, key: UInt32x2) -> UInt32x4 {
-        let roundConstant0: UInt64 = 0xD2511F53
-        let roundConstant1: UInt64 = 0xCD9E8D57
+        let roundConstant0: UInt64 = 0xD251_1F53
+        let roundConstant1: UInt64 = 0xCD9E_8D57
 
         let product0: UInt64 = roundConstant0 &* UInt64(ctr.0)
         let hi0 = UInt32(truncatingIfNeeded: product0 >> 32)
@@ -430,20 +432,20 @@ public struct PhiloxRandomNumberGenerator: SeedableRandomNumberGenerator {
 }
 
 /// Private helpers.
-fileprivate extension UInt64 {
-    var vector2: UInt32x2 {
+extension UInt64 {
+    fileprivate var vector2: UInt32x2 {
         let msb = UInt32(truncatingIfNeeded: self >> 32)
         let lsb = UInt32(truncatingIfNeeded: self & 0x0000_0000_FFFF_FFFF)
         return (msb, lsb)
     }
 
-    var vector4: UInt32x4 {
+    fileprivate var vector4: UInt32x4 {
         let msb = UInt32(truncatingIfNeeded: self >> 32)
         let lsb = UInt32(truncatingIfNeeded: self & 0x0000_0000_FFFF_FFFF)
         return (0, 0, msb, lsb)
     }
 
-    init(vector: UInt32x2) {
+    fileprivate init(vector: UInt32x2) {
         self = (UInt64(vector.0) << 32) + UInt64(vector.1)
     }
 }
@@ -480,7 +482,7 @@ public struct UniformIntegerDistribution<T: FixedWidthInteger>: RandomDistributi
 
 @frozen
 public struct UniformFloatingPointDistribution<T: BinaryFloatingPoint>: RandomDistribution
-  where T.RawSignificand: FixedWidthInteger {
+where T.RawSignificand: FixedWidthInteger {
     public let lowerBound: T
     public let upperBound: T
 
@@ -496,7 +498,7 @@ public struct UniformFloatingPointDistribution<T: BinaryFloatingPoint>: RandomDi
 
 @frozen
 public struct NormalDistribution<T: BinaryFloatingPoint>: RandomDistribution
-    where T.RawSignificand: FixedWidthInteger {
+where T.RawSignificand: FixedWidthInteger {
     public let mean: T
     public let standardDeviation: T
     private let uniformDist = UniformFloatingPointDistribution<T>()
@@ -559,7 +561,7 @@ public struct BetaDistribution: RandomDistribution {
         using rng: inout G
     ) -> Float {
         let alpha = a + b
-        let beta  = sqrtf((alpha - 2.0) / (2 * a * b - alpha))
+        let beta = sqrtf((alpha - 2.0) / (2 * a * b - alpha))
         let gamma = a + 1 / beta
 
         var r: Float = 0.0
@@ -606,10 +608,10 @@ public struct BetaDistribution: RandomDistribution {
         using rng: inout G
     ) -> Float {
         let alpha = a + b
-        let beta  = 1 / b
+        let beta = 1 / b
         let delta = 1 + a - b
-        let k1    = delta * (0.0138889 + 0.0416667 * b) / (a * beta - 0.777778)
-        let k2    = 0.25 + (0.5 + 0.25 / delta) * b
+        let k1 = delta * (0.0138889 + 0.0416667 * b) / (a * beta - 0.777778)
+        let k2 = 0.25 + (0.5 + 0.25 / delta) * b
 
         var w: Float = 0.0
 
@@ -642,6 +644,6 @@ public struct BetaDistribution: RandomDistribution {
         }
 
         w = min(w, Float.greatestFiniteMagnitude)
-        return a == alpha0 ? w / (b + w): b / (b + w)
+        return a == alpha0 ? w / (b + w) : b / (b + w)
     }
 }

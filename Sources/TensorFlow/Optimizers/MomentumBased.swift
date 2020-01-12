@@ -21,19 +21,27 @@
 /// Reference: ["rmsprop: Divide the gradient by a running average of its recent magnitude"](
 /// http://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf)
 public class RMSProp<Model: Differentiable>: Optimizer
-    where Model.TangentVector: VectorProtocol & PointwiseMultiplicative & ElementaryFunctions,
-          Model.TangentVector.VectorSpaceScalar == Float {
+where
+    Model.TangentVector: VectorProtocol & PointwiseMultiplicative & ElementaryFunctions,
+    Model.TangentVector.VectorSpaceScalar == Float
+{
     public typealias Model = Model
+
     /// The learning rate.
     public var learningRate: Float
+
     // TODO: Document `rho`. Keras doesn't document `rho`.
     public var rho: Float
+
     /// A small scalar added to the denominator to improve numerical stability.
     public var epsilon: Float
+
     /// The weight decay.
     public var decay: Float
+
     /// The step count.
     public var step: Float = 0
+
     /// The alpha values for all model differentiable variables.
     public var alpha: Model.TangentVector = .zero
 
@@ -71,16 +79,22 @@ public class RMSProp<Model: Differentiable>: Optimizer
 /// Reference: ["Adaptive Subgradient Methods for Online Learning and Stochastic Optimization"](
 /// http://www.jmlr.org/papers/volume12/duchi11a/duchi11a.pdf)
 public class AdaGrad<Model: Differentiable>: Optimizer
-    where Model.TangentVector: VectorProtocol & PointwiseMultiplicative & ElementaryFunctions,
-          Model.TangentVector.VectorSpaceScalar == Float {
+where
+    Model.TangentVector: VectorProtocol & PointwiseMultiplicative & ElementaryFunctions,
+    Model.TangentVector.VectorSpaceScalar == Float
+{
     public typealias Model = Model
+
     /// The learning rate.
     public var learningRate: Float
+
     /// The smoothing factor (ρ). Typical values are `0.5`, `0.9`, and `0.99`, for smoothing over 2,
     /// 10, and 100 examples, respectively.
     public var rho: Float
+
     /// A small scalar added to the denominator to improve numerical stability.
     public var epsilon: Float
+
     /// The alpha values for all model differentiable variables.
     public var alpha: Model.TangentVector = .zero
 
@@ -113,21 +127,30 @@ public class AdaGrad<Model: Differentiable>: Optimizer
 /// 
 /// Reference: ["ADADELTA: An Adaptive Learning Rate Method"](https://arxiv.org/abs/1212.5701)
 public class AdaDelta<Model: Differentiable>: Optimizer
-    where Model.TangentVector: VectorProtocol & PointwiseMultiplicative & ElementaryFunctions,
-          Model.TangentVector.VectorSpaceScalar == Float {
+where
+    Model.TangentVector: VectorProtocol & PointwiseMultiplicative & ElementaryFunctions,
+    Model.TangentVector.VectorSpaceScalar == Float
+{
     public typealias Model = Model
+
     /// The learning rate.
     public var learningRate: Float
+
     /// The decay factor, corresponding to fraction of gradient to keep at each time step.
     public var rho: Float
+
     /// A small scalar added to the denominator to improve numerical stability.
     public var epsilon: Float
+
     /// The learning rate decay.
     public var decay: Float
+
     /// The current step.
     public var step: Int = 0
+
     /// The accumulated, exponentially decaying average of squared gradients.
     public var averageSquared: Model.TangentVector = .zero
+
     /// The accumulated parameter updates.
     public var accumulatedDelta: Model.TangentVector = .zero
 
@@ -165,23 +188,33 @@ public class AdaDelta<Model: Differentiable>: Optimizer
 /// Reference: ["Adam - A Method for Stochastic Optimization"](
 /// https://arxiv.org/abs/1412.6980v8)
 public class Adam<Model: Differentiable>: Optimizer
-    where Model.TangentVector: VectorProtocol & PointwiseMultiplicative & ElementaryFunctions,
-          Model.TangentVector.VectorSpaceScalar == Float {
+where
+    Model.TangentVector: VectorProtocol & PointwiseMultiplicative & ElementaryFunctions,
+    Model.TangentVector.VectorSpaceScalar == Float
+{
     public typealias Model = Model
+
     /// The learning rate.
     public var learningRate: Float
+
     /// A coefficient used to calculate the first and second moments of the gradients.
     public var beta1: Float
+
     /// A coefficient used to calculate the first and second moments of the gradients.
     public var beta2: Float
+
     /// A small scalar added to the denominator to improve numerical stability.
     public var epsilon: Float
+
     /// The learning rate decay.
     public var decay: Float
+
     /// The current step.
     public var step: Int = 0
+
     /// The first moments of the weights.
     public var firstMoments: Model.TangentVector = .zero
+
     /// The second moments of the weights.
     public var secondMoments: Model.TangentVector = .zero
 
@@ -228,24 +261,34 @@ public class Adam<Model: Differentiable>: Optimizer
 /// Reference: Section 7 of ["Adam - A Method for Stochastic Optimization"](
 /// https://arxiv.org/abs/1412.6980v8)
 public class AdaMax<Model: Differentiable & KeyPathIterable>: Optimizer
-    where Model.TangentVector: VectorProtocol & PointwiseMultiplicative & 
-                               ElementaryFunctions & KeyPathIterable,
-          Model.TangentVector.VectorSpaceScalar == Float {
+where
+    Model.TangentVector: VectorProtocol & PointwiseMultiplicative & ElementaryFunctions
+        & KeyPathIterable,
+    Model.TangentVector.VectorSpaceScalar == Float
+{
     public typealias Model = Model
+
     /// The learning rate.
     public var learningRate: Float
+
     /// Decay rate used to estimate the first moment (mean) of gradients.
     public var beta1: Float
+
     /// Decay rate used to estimate the exponentially weighted infinity norm.
     public var beta2: Float
+
     /// A small scalar added to the denominator to improve numerical stability.
     public var epsilon: Float
+
     /// The learning rate decay.
     public var decay: Float
+
     /// The step count.
     public var step: Int = 0
+
     /// The first moments of the weights.
     public var firstMoments: Model.TangentVector = .zero
+
     /// The exponentially weighted infinity norm of the weights.
     public var infinityNorm: Model.TangentVector = .zero
 
@@ -304,26 +347,37 @@ public class AdaMax<Model: Differentiable & KeyPathIterable>: Optimizer
 /// Reference: ["On the Convergence of Adam and Beyond"](
 /// https://openreview.net/pdf?id=ryQu7f-RZ)
 public class AMSGrad<Model: Differentiable & KeyPathIterable>: Optimizer
-    where Model.TangentVector: VectorProtocol & PointwiseMultiplicative & 
-                               ElementaryFunctions & KeyPathIterable,
-          Model.TangentVector.VectorSpaceScalar == Float {
+where
+    Model.TangentVector: VectorProtocol & PointwiseMultiplicative & ElementaryFunctions
+        & KeyPathIterable,
+    Model.TangentVector.VectorSpaceScalar == Float
+{
     public typealias Model = Model
+
     /// The learning rate.
     public var learningRate: Float
+
     /// A coefficient used to calculate the first and second moments of the gradients.
     public var beta1: Float
+
     /// A coefficient used to calculate the first and second moments of the gradients.
     public var beta2: Float
+
     /// A small scalar added to the denominator to improve numerical stability.
     public var epsilon: Float
+
     /// The learning rate decay.
     public var decay: Float
+
     /// The current step.
     public var step: Int = 0
+
     /// The first moments of the weights.
     public var firstMoments: Model.TangentVector = .zero
+
     /// The second moments of the weights.
     public var secondMoments: Model.TangentVector = .zero
+
     /// The maximum of the second moments of the weights.
     public var secondMomentsMax: Model.TangentVector = .zero
 
@@ -385,24 +439,34 @@ public class AMSGrad<Model: Differentiable & KeyPathIterable>: Optimizer
 /// Reference: ["On the Variance of the Adaptive Learning Rate and Beyond"]
 /// https://arxiv.org/pdf/1908.03265.pdf
 public class RAdam<Model: Differentiable>: Optimizer
-    where Model.TangentVector: VectorProtocol & PointwiseMultiplicative & 
-                               ElementaryFunctions & KeyPathIterable,
-          Model.TangentVector.VectorSpaceScalar == Float {
+where
+    Model.TangentVector: VectorProtocol & PointwiseMultiplicative & ElementaryFunctions
+        & KeyPathIterable,
+    Model.TangentVector.VectorSpaceScalar == Float
+{
     public typealias Model = Model
+
     /// The learning rate.
     public var learningRate: Float
+
     /// A coefficient used to calculate the first and second moments of the gradients.
     public var beta1: Float
+
     /// A coefficient used to calculate the first and second moments of the gradients.
     public var beta2: Float
+
     /// A small scalar added to the denominator to improve numerical stability.
     public var epsilon: Float
+
     /// The learning rate decay.
     public var decay: Float
+
     /// The current step.
     public var step: Int = 0
+
     /// The first moments of the weights.
     public var firstMoments: Model.TangentVector = .zero
+
     /// The second moments of the weights.
     public var secondMoments: Model.TangentVector = .zero
 
@@ -434,16 +498,16 @@ public class RAdam<Model: Differentiable>: Optimizer
         secondMoments = beta2 * secondMoments + direction .* direction * (1 - beta2)
         firstMoments = beta1 * firstMoments + direction * (1 - beta1)
         // Compute maximum length SMA, bias-corrected moving average and approximate length.
-        let N_sma_inf =  2 / (1 - beta2) - 1
+        let N_sma_inf = 2 / (1 - beta2) - 1
         let N_sma_t = N_sma_inf - 2 * step * beta2Power / (1 - beta2Power)
 
         if N_sma_t > 5 {
             // Compute bias-corrected second moments, rectification and adapted momentum.
             let secondMoments_h = Model.TangentVector.sqrt(secondMoments) + epsilon
             let stepSize = sqrt(
-                (N_sma_t - 4) * (N_sma_t - 2) * N_sma_inf / (
-                     (N_sma_inf - 4) * (N_sma_inf - 2) * (N_sma_t)
-                ))
+                (N_sma_t - 4) * (N_sma_t - 2) * N_sma_inf
+                    / ((N_sma_inf - 4) * (N_sma_inf - 2) * (N_sma_t)
+                    ))
             model.move(along: -stepSize * sqrt(1 - beta2Power) * firstMoments ./ secondMoments_h)
         } else {
             // Update with un-adapted momentum.

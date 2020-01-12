@@ -61,7 +61,7 @@ extension LazyTensorOperation {
             case .list(let values): return values.lazy.map { shape(for: $0) }
             }
         }
-        let inputShapeList = TF_NewShapeAndTypeList(/*num_shapes*/ Int32(inputShapes.count))
+        let inputShapeList = TF_NewShapeAndTypeList( /*num_shapes*/Int32(inputShapes.count))
         defer { TF_DeleteShapeAndTypeList(inputShapeList) }
         for (i, shape) in inputShapes.enumerated() {
             guard let shape = shape else {
@@ -72,7 +72,8 @@ extension LazyTensorOperation {
             int64_dimensions.withUnsafeBufferPointer { buffer in
                 TF_ShapeAndTypeListSetShape(
                     inputShapeList,
-                    /*index*/ Int32(i),
+                    // index
+                    Int32(i),
                     buffer.baseAddress,
                     Int32(int64_dimensions.count))
             }
@@ -104,7 +105,7 @@ extension LazyTensorOperation {
             case .single(let v):
                 inputTensors.append(cTensor(handle: v))
             case .list(let values):
-                inputTensors.append(contentsOf: values.lazy.map { cTensor(handle: $0) } )
+                inputTensors.append(contentsOf: values.lazy.map { cTensor(handle: $0) })
             }
         }
 
@@ -121,12 +122,18 @@ extension LazyTensorOperation {
         inputTensors.withUnsafeMutableBufferPointer { buffer in
             TFE_InferShapes(
                 tfeOp.op,
-                /*input_shapes*/ inputShapeList,
-                /*input_tensors*/ buffer.baseAddress!,
-                /*input_tensors_as_shapes*/ nil,
-                /*input_resource_shapes_and_types*/ nil,
-                /*output_shapes*/ &outputShapeListPtr,
-                /*output_resource_shapes_and_types*/ nil,
+                // input_shapes
+                inputShapeList,
+                // input_tensors
+                buffer.baseAddress!,
+                // input_tensors_as_shapes
+                nil,
+                // input_resource_shapes_and_types
+                nil,
+                // output_shapes
+                &outputShapeListPtr,
+                // output_resource_shapes_and_types
+                nil,
                 status)
             checkOk(status)
         }

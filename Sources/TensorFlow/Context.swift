@@ -13,15 +13,15 @@
 // limitations under the License.
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-import Darwin
+    import Darwin
 #elseif os(Windows)
-import ucrt
+    import ucrt
 #else
-import Glibc
+    import Glibc
 #endif
 
 #if !COMPILING_TENSORFLOW_STDLIB_MODULE
-import Tensor
+    import Tensor
 #endif
 
 /// A value that indicates the phase of using a machine learning model.
@@ -163,9 +163,9 @@ private final class ContextManager {
     static let key: pthread_key_t = {
         var key = pthread_key_t()
         pthread_key_create(&key) { obj in
-#if !(os(macOS) || os(iOS) || os(watchOS) || os(tvOS))
-            let obj = obj!
-#endif
+            #if !(os(macOS) || os(iOS) || os(watchOS) || os(tvOS))
+                let obj = obj!
+            #endif
             Unmanaged<ContextManager>.fromOpaque(obj).release()
         }
         return key
@@ -190,8 +190,9 @@ private final class ContextManager {
     ///
     /// - Precondition: The context stack must contain more than `1` contexts.
     func popContext() {
-        assert(contextStack.count > 1,
-               "Internal error: Only 1 context is available. Popping is not allowed.")
+        assert(
+            contextStack.count > 1,
+            "Internal error: Only 1 context is available. Popping is not allowed.")
         contextStack.removeLast()
     }
 

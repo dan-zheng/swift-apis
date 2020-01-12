@@ -15,7 +15,7 @@ import CTensorFlow
 
 extension TFETensorHandle: Equatable {}
 
-public func ==(_ lhs: TFETensorHandle, _ rhs: TFETensorHandle) -> Bool {
+public func == (_ lhs: TFETensorHandle, _ rhs: TFETensorHandle) -> Bool {
     return lhs._cTensorHandle == rhs._cTensorHandle
 }
 
@@ -65,18 +65,18 @@ extension LazyTensorOperation.Input {
 extension LazyTensorOperation {
     /// Returns true if these operations are equivalent when comparing lazy tensor traces.
     func isEquivalent(to other: LazyTensorOperation) -> Bool {
-        return self.name == other.name &&
-            self.outputCount == other.outputCount &&
-            self.deviceName == other.deviceName &&
-            self.inputs.elementsEqual(other.inputs, by: { $0.isEquivalent(to: $1) }) &&
-            self.attributes == other.attributes
+        return self.name == other.name && self.outputCount == other.outputCount
+            && self.deviceName == other.deviceName
+            && self.inputs.elementsEqual(other.inputs, by: { $0.isEquivalent(to: $1) })
+            && self.attributes == other.attributes
     }
 }
 
 // TODO(TF-693): This is not thread safe!
-struct LazyTensorTraceCache {
+enum LazyTensorTraceCache {
     /// Cache from signature to traces that match signature.
     static private var cache: [String: [LazyTensorTrace]] = [:]
+
     static func clearCache() { cache.removeAll() }
 
     /// Returns a `MaterializationTraceInfo` with possibly some constants promoted to inputs.
@@ -100,8 +100,10 @@ struct LazyTensorTraceCache {
     }
 }
 
-private extension MaterializationTraceInfo {
-    func withPromotedConstants(cachedTrace: LazyTensorTrace) -> MaterializationTraceInfo? {
+extension MaterializationTraceInfo {
+    fileprivate func withPromotedConstants(cachedTrace: LazyTensorTrace)
+        -> MaterializationTraceInfo?
+    {
         let currentTrace = self.trace
         if currentTrace.operations.count != cachedTrace.operations.count { return nil }
         var promotableConstants: [(Int, TFETensorHandle)] = []
@@ -145,7 +147,7 @@ private extension MaterializationTraceInfo {
         let currentValue = current.attributes["value"]!
         let cachedValue = cached.attributes["value"]!
         guard case let .constTensor(currentTensor) = currentValue,
-              case let .constTensor(cachedTensor) = cachedValue
+            case let .constTensor(cachedTensor) = cachedValue
         else { return nil }
         let currentDtype = TFE_TensorHandleDataType(currentTensor._cTensorHandle)
         let cachedDtype = TFE_TensorHandleDataType(cachedTensor._cTensorHandle)

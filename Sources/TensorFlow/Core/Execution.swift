@@ -16,8 +16,10 @@
 public enum DeviceKind {
     /// The CPU device kind.
     case cpu
+
     /// The GPU device kind.
     case gpu
+
     /// The TPU device kind.
     case tpu
 }

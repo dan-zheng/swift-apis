@@ -36,12 +36,13 @@ public struct StringTensor {
 // Initialization
 //===------------------------------------------------------------------------------------------===//
 
-public extension StringTensor {
+extension StringTensor {
     @inlinable
-    init(shape: TensorShape, scalars: [String]) {
+    public init(shape: TensorShape, scalars: [String]) {
         let contiguousSize = shape.contiguousSize
-        precondition(scalars.count == contiguousSize,
-                     "The number of scalars does not match the shape.")
+        precondition(
+            scalars.count == contiguousSize,
+            "The number of scalars does not match the shape.")
 
         // utf8CString is null-terminated. TF APIs want the strings without null-terminators.
         let cStrings = scalars.map { $0.utf8CString.dropLast() }
@@ -67,7 +68,7 @@ public extension StringTensor {
                 // Initialize the "start_offset" region.
                 var startOffset: UInt64 = 0
                 var startOffsetAddr =
-                tensorBuffer.bindMemory(to: UInt64.self, capacity: scalars.count)
+                    tensorBuffer.bindMemory(to: UInt64.self, capacity: scalars.count)
                 for tfEncodedSize in tfEncodedSizes {
                     startOffsetAddr.initialize(to: startOffset)
                     startOffsetAddr = startOffsetAddr.advanced(by: 1)
@@ -93,13 +94,13 @@ public extension StringTensor {
 
     /// Creates a 0-D `StringTensor` from a scalar value.
     @inlinable
-    init(_ value: String) {
+    public init(_ value: String) {
         self.init(shape: [], scalars: [value])
     }
 
     /// Creates a 1-D `StringTensor` in from contiguous scalars.
     @inlinable
-    init(_ scalars: [String]) {
+    public init(_ scalars: [String]) {
         self.init(shape: [scalars.count], scalars: scalars)
     }
 }
@@ -108,13 +109,13 @@ public extension StringTensor {
 // Array Conversion
 //===------------------------------------------------------------------------------------------===//
 
-public extension StringTensor {
-    var array: ShapedArray<String> {
+extension StringTensor {
+    public var array: ShapedArray<String> {
         debugLog("Returning a host copy of string array.")
         return handle.makeHostCopy()
     }
 
-    var scalars: [String] {
+    public var scalars: [String] {
         return array.scalars
     }
 }
@@ -122,11 +123,11 @@ public extension StringTensor {
 //===------------------------------------------------------------------------------------------===//
 // Element-wise comparison.
 //===------------------------------------------------------------------------------------------===//
-public extension StringTensor {
+extension StringTensor {
     /// Computes `self == other` element-wise.
     /// - Note: `elementsEqual` supports broadcasting.
     @inlinable
-    func elementsEqual(_ other: StringTensor) -> Tensor<Bool> {
+    public func elementsEqual(_ other: StringTensor) -> Tensor<Bool> {
         return _Raw.equal(self, other)
     }
 }

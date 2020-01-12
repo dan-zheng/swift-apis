@@ -199,7 +199,8 @@ internal struct TFE_Op: TFTensorOperation {
 
             stringAddrs.withUnsafeBufferPointer { stringAddrsBuffer in
                 lengths.withUnsafeBufferPointer { lengthsBuffer in
-                    TFE_OpSetAttrStringList(op, name, stringAddrsBuffer.baseAddress,
+                    TFE_OpSetAttrStringList(
+                        op, name, stringAddrsBuffer.baseAddress,
                         lengthsBuffer.baseAddress, Int32(value.count))
                 }
             }
@@ -293,7 +294,7 @@ internal struct TFE_Op: TFTensorOperation {
     internal func evaluateUnsafe() -> UnsafeMutablePointer<CTensorHandle> {
         var count: Int32 = Int32(self.outputCount)
         let buffer: UnsafeMutablePointer<CTensorHandle> =
-        UnsafeMutablePointer.allocate(capacity: Int(count))
+            UnsafeMutablePointer.allocate(capacity: Int(count))
         _TFCOpSetDeviceFromScope(op, status)
         checkOk(status)
         _TFCEagerExecute(op, UnsafeMutablePointer<CTensorHandle?>(buffer), &count, status)
@@ -314,8 +315,7 @@ internal struct TFE_Op: TFTensorOperation {
     ) -> (T0) {
         let buffer = evaluateUnsafe()
         let offset0 = Int32(0)
-        let result = (
-            T0.init(_owning: buffer.advanced(by: Int(offset0)), count: count0))
+        let result = (T0.init(_owning: buffer.advanced(by: Int(offset0)), count: count0))
         buffer.deallocate()
         return result
     }
@@ -330,13 +330,16 @@ internal struct TFE_Op: TFTensorOperation {
         let offset1 = offset0 + Int32(count0)
         let result = (
             T0.init(_owning: buffer.advanced(by: Int(offset0)), count: count0),
-            T1.init(_owning: buffer.advanced(by: Int(offset1)), count: count1))
+            T1.init(_owning: buffer.advanced(by: Int(offset1)), count: count1)
+        )
         buffer.deallocate()
         return result
     }
 
     @inlinable @inline(__always)
-    internal func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol>(
+    internal func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int
@@ -348,13 +351,17 @@ internal struct TFE_Op: TFTensorOperation {
         let result = (
             T0.init(_owning: buffer.advanced(by: Int(offset0)), count: count0),
             T1.init(_owning: buffer.advanced(by: Int(offset1)), count: count1),
-            T2.init(_owning: buffer.advanced(by: Int(offset2)), count: count2))
+            T2.init(_owning: buffer.advanced(by: Int(offset2)), count: count2)
+        )
         buffer.deallocate()
         return result
     }
 
     @inlinable @inline(__always)
-    internal func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol>(
+    internal func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -369,13 +376,17 @@ internal struct TFE_Op: TFTensorOperation {
             T0.init(_owning: buffer.advanced(by: Int(offset0)), count: count0),
             T1.init(_owning: buffer.advanced(by: Int(offset1)), count: count1),
             T2.init(_owning: buffer.advanced(by: Int(offset2)), count: count2),
-            T3.init(_owning: buffer.advanced(by: Int(offset3)), count: count3))
+            T3.init(_owning: buffer.advanced(by: Int(offset3)), count: count3)
+        )
         buffer.deallocate()
         return result
     }
 
     @inlinable @inline(__always)
-    internal func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol>(
+    internal func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -393,13 +404,17 @@ internal struct TFE_Op: TFTensorOperation {
             T1.init(_owning: buffer.advanced(by: Int(offset1)), count: count1),
             T2.init(_owning: buffer.advanced(by: Int(offset2)), count: count2),
             T3.init(_owning: buffer.advanced(by: Int(offset3)), count: count3),
-            T4.init(_owning: buffer.advanced(by: Int(offset4)), count: count4))
+            T4.init(_owning: buffer.advanced(by: Int(offset4)), count: count4)
+        )
         buffer.deallocate()
         return result
     }
 
     @inlinable @inline(__always)
-    internal func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol>(
+    internal func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -420,13 +435,18 @@ internal struct TFE_Op: TFTensorOperation {
             T2.init(_owning: buffer.advanced(by: Int(offset2)), count: count2),
             T3.init(_owning: buffer.advanced(by: Int(offset3)), count: count3),
             T4.init(_owning: buffer.advanced(by: Int(offset4)), count: count4),
-            T5.init(_owning: buffer.advanced(by: Int(offset5)), count: count5))
+            T5.init(_owning: buffer.advanced(by: Int(offset5)), count: count5)
+        )
         buffer.deallocate()
         return result
     }
 
     @inlinable @inline(__always)
-    internal func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol, T6: TensorArrayProtocol>(
+    internal func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol,
+        T6: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -450,13 +470,18 @@ internal struct TFE_Op: TFTensorOperation {
             T3.init(_owning: buffer.advanced(by: Int(offset3)), count: count3),
             T4.init(_owning: buffer.advanced(by: Int(offset4)), count: count4),
             T5.init(_owning: buffer.advanced(by: Int(offset5)), count: count5),
-            T6.init(_owning: buffer.advanced(by: Int(offset6)), count: count6))
+            T6.init(_owning: buffer.advanced(by: Int(offset6)), count: count6)
+        )
         buffer.deallocate()
         return result
     }
 
     @inlinable @inline(__always)
-    internal func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol, T6: TensorArrayProtocol, T7: TensorArrayProtocol>(
+    internal func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol,
+        T6: TensorArrayProtocol, T7: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -483,13 +508,18 @@ internal struct TFE_Op: TFTensorOperation {
             T4.init(_owning: buffer.advanced(by: Int(offset4)), count: count4),
             T5.init(_owning: buffer.advanced(by: Int(offset5)), count: count5),
             T6.init(_owning: buffer.advanced(by: Int(offset6)), count: count6),
-            T7.init(_owning: buffer.advanced(by: Int(offset7)), count: count7))
+            T7.init(_owning: buffer.advanced(by: Int(offset7)), count: count7)
+        )
         buffer.deallocate()
         return result
     }
 
     @inlinable @inline(__always)
-    internal func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol, T6: TensorArrayProtocol, T7: TensorArrayProtocol, T8: TensorArrayProtocol>(
+    internal func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol,
+        T6: TensorArrayProtocol, T7: TensorArrayProtocol, T8: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -519,13 +549,19 @@ internal struct TFE_Op: TFTensorOperation {
             T5.init(_owning: buffer.advanced(by: Int(offset5)), count: count5),
             T6.init(_owning: buffer.advanced(by: Int(offset6)), count: count6),
             T7.init(_owning: buffer.advanced(by: Int(offset7)), count: count7),
-            T8.init(_owning: buffer.advanced(by: Int(offset8)), count: count8))
+            T8.init(_owning: buffer.advanced(by: Int(offset8)), count: count8)
+        )
         buffer.deallocate()
         return result
     }
 
     @inlinable @inline(__always)
-    internal func execute<T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol, T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol, T6: TensorArrayProtocol, T7: TensorArrayProtocol, T8: TensorArrayProtocol, T9: TensorArrayProtocol>(
+    internal func execute<
+        T0: TensorArrayProtocol, T1: TensorArrayProtocol, T2: TensorArrayProtocol,
+        T3: TensorArrayProtocol, T4: TensorArrayProtocol, T5: TensorArrayProtocol,
+        T6: TensorArrayProtocol, T7: TensorArrayProtocol, T8: TensorArrayProtocol,
+        T9: TensorArrayProtocol
+    >(
         _ count0: Int,
         _ count1: Int,
         _ count2: Int,
@@ -558,7 +594,8 @@ internal struct TFE_Op: TFTensorOperation {
             T6.init(_owning: buffer.advanced(by: Int(offset6)), count: count6),
             T7.init(_owning: buffer.advanced(by: Int(offset7)), count: count7),
             T8.init(_owning: buffer.advanced(by: Int(offset8)), count: count8),
-            T9.init(_owning: buffer.advanced(by: Int(offset9)), count: count9))
+            T9.init(_owning: buffer.advanced(by: Int(offset9)), count: count9)
+        )
         buffer.deallocate()
         return result
     }

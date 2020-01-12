@@ -106,8 +106,7 @@ extension Array: ElementaryFunctions where Element: ElementaryFunctions {
 // MARK: - Array derivative extensions
 
 extension Array.DifferentiableView: ElementaryFunctions
-    where Element: Differentiable & ElementaryFunctions
-{
+where Element: Differentiable & ElementaryFunctions {
     /// The square root of `x`.
     ///
     /// For real types, if `x` is negative the result is `.nan`. For complex
@@ -223,8 +222,7 @@ where Element: Differentiable {
 }
 
 extension Array.DifferentiableView: VectorProtocol
-    where Element: Differentiable & VectorProtocol
-{
+where Element: Differentiable & VectorProtocol {
     public typealias VectorSpaceScalar = Element.VectorSpaceScalar
 
     public func adding(_ x: Element.VectorSpaceScalar) -> Array<Element>.DifferentiableView {
@@ -259,8 +257,7 @@ extension Array.DifferentiableView: VectorProtocol
 }
 
 extension Array.DifferentiableView: PointwiseMultiplicative
-    where Element: Differentiable & PointwiseMultiplicative
-{
+where Element: Differentiable & PointwiseMultiplicative {
     // FIXME: `one` should probably be removed from the protocol. `Array` cannot represent `one`.
     public static var one: Self {
         fatalError("One is not array-representable")

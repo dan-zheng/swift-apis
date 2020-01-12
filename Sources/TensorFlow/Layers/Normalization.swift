@@ -24,16 +24,22 @@
 public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
     /// The feature dimension.
     @noDerivative public let axis: Int
+
     /// The momentum for the running mean and running variance.
     @noDerivative public let momentum: Scalar
+
     /// The offset value, also known as beta.
     public var offset: Tensor<Scalar>
+
     /// The scale value, also known as gamma.
     public var scale: Tensor<Scalar>
+
     /// The variance epsilon value.
     @noDerivative public let epsilon: Scalar
+
     /// The running mean.
     @noDerivative public var runningMean: Parameter<Scalar>
+
     /// The running variance.
     @noDerivative public var runningVariance: Parameter<Scalar>
 
@@ -82,17 +88,17 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
         }
         switch Context.local.learningPhase {
         case .training:
-          var normalizedAxes = Array(0..<input.rank)
-          normalizedAxes.remove(at: positiveAxis)
-          let moments = input.moments(alongAxes: normalizedAxes)
-          let decayMomentum = Tensor(1 - momentum, on: input.device)
-          runningMean.value += (moments.mean - runningMean.value) * decayMomentum
-          runningVariance.value += (moments.variance - runningVariance.value) * decayMomentum
-          let inv = rsqrt(moments.variance + Tensor(epsilon, on: input.device)) * scale
-          return (input - moments.mean) * inv + offset
+            var normalizedAxes = Array(0..<input.rank)
+            normalizedAxes.remove(at: positiveAxis)
+            let moments = input.moments(alongAxes: normalizedAxes)
+            let decayMomentum = Tensor(1 - momentum, on: input.device)
+            runningMean.value += (moments.mean - runningMean.value) * decayMomentum
+            runningVariance.value += (moments.variance - runningVariance.value) * decayMomentum
+            let inv = rsqrt(moments.variance + Tensor(epsilon, on: input.device)) * scale
+            return (input - moments.mean) * inv + offset
         case .inference:
-          let inv = rsqrt(runningVariance.value + Tensor(epsilon, on: input.device)) * scale
-          return (input - runningMean.value) * inv + offset
+            let inv = rsqrt(runningVariance.value + Tensor(epsilon, on: input.device)) * scale
+            return (input - runningMean.value) * inv + offset
         }
     }
 
@@ -127,10 +133,13 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
 public struct LayerNorm<Scalar: TensorFlowFloatingPoint>: Layer {
     /// The offset value, also known as beta.
     public var offset: Tensor<Scalar>
+
     /// The scale value, also known as gamma.
     public var scale: Tensor<Scalar>
+
     /// The axis.
     @noDerivative public let axis: Int
+
     /// The variance epsilon value.
     @noDerivative public let epsilon: Scalar
 
