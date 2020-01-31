@@ -1248,8 +1248,8 @@ public func gelu<T: TensorFlowFloatingPoint>(_ x: Tensor<T>) -> Tensor<T> {
     // An approximation of the Gauss error function.
     // NOTE: This is needed because the compiler otherwise gives an "unable to type-check this
     // in reasonable time" error when the below expressions are written on a single line.
-    let approximateErf = tanh(ratio * (x + 0.044715 * pow(x, 3)))
-    let cdf = 0.5 * (1.0 + approximateErf)
+    let approximateErf = tanh(ratio * (x + Tensor(0.044715) * pow(x, 3)))
+    let cdf = Tensor(0.5) * (Tensor(1.0) + approximateErf)
     return x * cdf
 }
 

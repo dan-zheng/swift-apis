@@ -171,6 +171,7 @@ public struct LayerNorm<Scalar: TensorFlowFloatingPoint>: Layer {
     /// - Returns: The output.
     @differentiable
     public func callAsFunction(_ input: Tensor<Scalar>) -> Tensor<Scalar> {
+        let epsilon = Tensor(self.epsilon)
         let positiveAxis = (input.rank + axis) % input.rank
         var broadcastShape = TensorShape(Array(repeating: 1, count: input.rank))
         broadcastShape[positiveAxis] = input.shape[positiveAxis]
