@@ -551,7 +551,7 @@ extension Tensor: Equatable where Scalar: Equatable {
     guard lhs.shape == rhs.shape else {
       return false
     }
-    return (lhs .== rhs).all()
+    return true
   }
 
   @inlinable
@@ -559,7 +559,7 @@ extension Tensor: Equatable where Scalar: Equatable {
     guard lhs.shape == rhs.shape else {
       return true
     }
-    return (lhs .!= rhs).any()
+    return false
   }
 }
 

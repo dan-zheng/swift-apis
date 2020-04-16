@@ -12,6 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/// A mutable, shareable, owning reference to a tensor.
+public final class Parameter<Scalar: TensorFlowScalar> {
+  public var value: Tensor<Scalar>
+  public init(_ value: Tensor<Scalar>) {
+    self.value = value
+  }
+}
+
 //===------------------------------------------------------------------------------------------===//
 // Losses
 //===------------------------------------------------------------------------------------------===//
@@ -29,6 +37,7 @@ public func l1Loss<Scalar: TensorFlowFloatingPoint>(
   l1Loss(predicted: predicted, expected: expected, reduction: { $0.sum() })
 }
 
+/*
 /// Returns the L2 loss between predictions and expectations.
 ///
 /// - Parameters:
@@ -146,3 +155,4 @@ public func sigmoidCrossEntropy<Scalar: TensorFlowFloatingPoint>(
 ) -> Tensor<Scalar> {
   sigmoidCrossEntropy(logits: logits, labels: labels, reduction: { $0.mean() })
 }
+*/

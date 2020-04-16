@@ -27,29 +27,12 @@ let package = Package(
       name: "TensorFlow",
       type: .dynamic,
       targets: ["TensorFlow"]),
-    .library(
-      name: "Tensor",
-      type: .dynamic,
-      targets: ["Tensor"]),
   ],
   dependencies: [],
   targets: [
     .target(
-      name: "Tensor",
-      dependencies: []),
-    .target(
       name: "TensorFlow",
-      dependencies: ["Tensor"]),
-    .target(
-      name: "Experimental",
-      dependencies: [],
-      path: "Sources/third_party/Experimental"),
-    .testTarget(
-      name: "ExperimentalTests",
-      dependencies: ["Experimental"]),
-    .testTarget(
-      name: "TensorTests",
-      dependencies: ["Tensor"]),
+      dependencies: []),
     .testTarget(
       name: "TensorFlowTests",
       dependencies: ["TensorFlow"]),

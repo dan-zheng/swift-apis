@@ -28,6 +28,7 @@ public func l1Loss<Scalar: TensorFlowFloatingPoint>(
   reduction(abs(expected - predicted))
 }
 
+/*
 /// Computes the L2 loss between `expected` and `predicted`.
 /// `loss = reduction(square(expected - predicted))`
 ///
@@ -333,6 +334,7 @@ public func huberLoss<Scalar: TensorFlowFloatingPoint>(
   let linear = absError - quadratic
   return reduction((0.5 * quadratic * quadratic) + (delta * linear))
 }
+*/
 
 /// Workaround for TF-1030 so that we can use sum as a default argument for reductions.
 /// `Tensor<Scalar>.sum()` is the preferred way to do this.
