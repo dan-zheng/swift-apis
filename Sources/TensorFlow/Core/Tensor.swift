@@ -623,6 +623,54 @@ extension Tensor {
   #if USING_X10_BACKEND
     public var irText: String { XLATensor.irText(xlaTensor) }
   #endif
+
+  // public static var annotationsUnavailable: String {
+  //   return "Annotations only available in XLA."
+  // }
+
+  public var annotations: String {
+    #if USING_X10_BACKEND
+      switch handle.backend {
+      case .XLA:
+        let rawAnnotations = XLATensor.annotations(xlaTensor)
+
+        // TODO(michellecasbon): Add formatting.
+
+        let formattedAnnotations = """
+        Layer                         Output Shape         Attributes
+        ============================= ==================== ======================
+        \(rawAnnotations)
+        """
+
+        return formattedAnnotations
+
+      case .TF_EAGER:
+        let newTensor = Tensor(copying: self, to: Device.defaultXLA)
+        return newTensor.annotations
+        // return Device.defaultTFEager.annotationsAvailable
+      }
+
+    // #else
+    //   return Device.defaultTFEager.annotationsAvailable
+    #endif
+    return ""
+  }
+
+  @noDerivative
+  public func annotate(_ annotation: String) -> Tensor {
+    #if USING_X10_BACKEND
+      switch handle.backend {
+      case .XLA:
+        return Tensor(_xla: XLATensor.annotate(xlaTensor, annotation))
+      case .TF_EAGER:
+        return self
+      }
+    #else
+      return self
+    #endif
+  }
+
+  public var summary: String { annotations }
 }
 
 // Xcode Playground display conversion.
