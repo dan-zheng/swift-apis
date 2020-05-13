@@ -18,11 +18,11 @@
 /// The first element of the base collection is applied first by the composite,
 /// so it is the inner call of the composition or the last in the sequence of
 /// composed layers in “f ∘ g” notation.
-public struct SequentialComposition<Base: Collection>
-  where Base.Element : Layer, Base.Element.Input == Base.Element.Output
+public struct SequentialComposition<Base: Collection>: Differentiable
+where Base: Differentiable, Base.Element: Layer, Base.Element.Input == Base.Element.Output
 {
   /// The layers to be composed.
-  private let base: Base
+  public var base: Base
 
   /// Creates an instance that composes the elenents of `base` in order, such
   /// that the first element of `base` is applied first by the composite.
@@ -35,9 +35,34 @@ public struct SequentialComposition<Base: Collection>
   public func callAsFunction(
     _ input: Base.Element.Input
   ) -> Base.Element.Output {
-    var r = input
-    for l in base { r = l(r) }
-    return r
+    var result = input
+    for i in withoutDerivative(at: base.indices) {
+      result = base[i](result)
+    }
+    return result
+  }
+
+  @usableFromInline
+  @derivative(of: callAsFunction, wrt: (self, input))
+  internal func vjpCallAsFunction(
+    _ input: Base.Element.Input
+  ) -> (
+    value: Base.Element.Output,
+    pullback: (Base.Element.Output.TangentVector) -> (TangentVector, Base.Element.Input.TangentVector)
+  ) {
+    var result = input
+    var pullbacks: [Base.Element.Backpropagator] = []
+    pullbacks.reserveCapacity(base.count)
+    for i in withoutDerivative(at: base.indices) {
+      let (newResult, pb) = valueWithPullback(at: base[i], result) { $0($1) }
+      result = newResult
+      pullbacks.append(pb)
+    }
+    func pullback(_ outputGradient: (Base.Element.Output.TangentVector))
+      -> (TangentVector, Base.Element.Input.TangentVector) {
+      fatalError()
+    }
+    return (result, pullback)
   }
 
   // TODO: How is this documented?
@@ -46,7 +71,7 @@ public struct SequentialComposition<Base: Collection>
   }
 }
 
-extension Collection where Element : Layer, Element.Input == Element.Output
+extension Collection where Self: Differentiable, Element: Layer, Element.Input == Element.Output
 {
   /// A sequential composition of the elements of `self`.
   ///

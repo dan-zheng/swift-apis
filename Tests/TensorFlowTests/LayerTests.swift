@@ -2125,19 +2125,42 @@ final class LayerTests: XCTestCase {
     var layers: [Dense<Float>] = []
     let sizes = [(8, 7), (7, 6), (6, 5)]
     for (inputSize, outputSize) in sizes {
-      let weight = Tensor<Float>(shape: [inputSize, outputSize], scalars: (0..<inputSize*outputSize).map(Float.init))
+      let weight = Tensor<Float>(
+        shape: [inputSize, outputSize], scalars: (0..<inputSize * outputSize).map(Float.init))
       let bias = Tensor<Float>(shape: [1, outputSize], scalars: (0..<outputSize).map(Float.init))
       layers.append(Dense<Float>(weight: weight, bias: bias, activation: identity))
     }
 
     let input = Tensor<Float>(shape: [5, 8], scalars: (0..<40).map(Float.init))
-    let output = layers.sequentiallyComposed(input)
-    let expected = input.sequenced(through: layers[0], layers[1], layers[2])
-    assertEqual(output, expected, accuracy: 1e-5)
+    let output = layers.sequentiallyComposed(input).sum()
+    // let expectedOutput = input.sequenced(through: layers[0], layers[1], layers[2])
+    /*
+    let (output, grad) = valueWithGradient(at: layers, input) { $0.sequentiallyComposed($1).sum() }
+    */
+
+    struct MLP: Differentiable {
+      var dense1: Dense<Float>
+      var dense2: Dense<Float>
+      var dense3: Dense<Float>
+
+      init(_ dense1: Dense<Float>, _ dense2: Dense<Float>, _ dense3: Dense<Float>) {
+        self.dense1 = dense1
+        self.dense2 = dense2
+        self.dense3 = dense3
+      }
+    }
+/*
+    let (expectedOutput, expectedGrad) = valueWithGradient(at: input, layers[0], layers[1], layers[2]) {
+      $0.sequenced(through: $1, $2, $3)
+    }
+*/
+    let (expectedOutput, expectedGrad) = valueWithGradient(at: input, MLP(layers[0], layers[1], layers[2])) {
+      $0.sequenced(through: $1.dense1, $1.dense2, $1.dense3).sum()
+    }
+    assertEqual(output, expectedOutput, accuracy: 1e-5)
   }
 
   static var allTests = [
-    ("testSequentialComposition", testSequentialComposition),
     ("testConv1D", testConv1D),
     ("testConv1DDilation", testConv1DDilation),
     ("testConv2D", testConv2D),
@@ -2214,5 +2237,6 @@ final class LayerTests: XCTestCase {
     ("testGaussianNoise", testGaussianNoise),
     ("testGaussianDropout", testGaussianDropout),
     ("testAlphaDropout", testAlphaDropout),
+    ("testSequentialComposition", testSequentialComposition),
   ]
 }
