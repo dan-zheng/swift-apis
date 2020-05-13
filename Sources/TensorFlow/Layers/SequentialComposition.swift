@@ -18,7 +18,7 @@
 /// The first element of the base collection is applied first by the composite,
 /// so it is the inner call of the composition or the last in the sequence of
 /// composed layers in “f ∘ g” notation.
-public struct SequentialComposition<Base: Collection>
+public struct SequentialComposition<Base: Collection>: Differentiable
   where Base.Element : Layer, Base.Element.Input == Base.Element.Output
 {
   /// The layers to be composed.
@@ -31,7 +31,7 @@ public struct SequentialComposition<Base: Collection>
   }
   
   /// Performs the composed layer application.
-  @differentiable
+  @differentiable(wrt: (self, input))
   public func callAsFunction(
     _ input: Base.Element.Input
   ) -> Base.Element.Output {
