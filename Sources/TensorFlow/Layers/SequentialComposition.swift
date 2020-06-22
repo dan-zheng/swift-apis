@@ -19,17 +19,16 @@
 /// so it is the inner call of the composition or the last in the sequence of
 /// composed layers in “f ∘ g” notation.
 public struct SequentialComposition<Base: Collection>: Differentiable
-  where Base.Element : Layer, Base.Element.Input == Base.Element.Output
-{
+where Base: Differentiable, Base.Element: Layer, Base.Element.Input == Base.Element.Output {
   /// The layers to be composed.
-  private let base: Base
+  private var base: Base
 
   /// Creates an instance that composes the elenents of `base` in order, such
   /// that the first element of `base` is applied first by the composite.
   public init(_ base: Base) {
     self.base = base
   }
-  
+
   /// Performs the composed layer application.
   @differentiable(wrt: (self, input))
   public func callAsFunction(
@@ -46,12 +45,12 @@ public struct SequentialComposition<Base: Collection>: Differentiable
   }
 }
 
-extension Collection where Element : Layer, Element.Input == Element.Output
-{
+extension Collection where Self: Differentiable, Element: Layer, Element.Input == Element.Output {
   /// A sequential composition of the elements of `self`.
   ///
   /// The first element of `self` is applied first by the composite, i.e. it is
   /// the inner call of the composition or the last in the sequence of composed
   /// functions in “f ∘ g” notation.
+  @differentiable
   var sequentiallyComposed: SequentialComposition<Self> { .init(self) }
 }

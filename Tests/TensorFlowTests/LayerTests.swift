@@ -2135,15 +2135,7 @@ final class LayerTests: XCTestCase {
     let (output, grad) = valueWithGradient(at: layers, input) { $0.sequentiallyComposed($1).sum() }
     let (layersGrad, inputGrad) = grad
 
-    // Ideal code: requires arity-4 `valueWithGradient`.
-    /*
-    let (expectedOutput, expectedGrad) = valueWithGradient(at: input, layers[0], layers[1], layers[2]) {
-      $0.sequenced(through: $1, $2, $3)
-    }
-    let (expectedInputGrad, expectedLayer0Grad, expectedLayer1Grad, expectedLayer2Grad) = expectedGrad
-    */
     // Workaround for lack of arity-4 `valueWithGradient`.
-    // START WORKAROUND
     struct Layers: Differentiable {
       var layer0: Dense<Float>
       var layer1: Dense<Float>
@@ -2162,7 +2154,6 @@ final class LayerTests: XCTestCase {
     let expectedLayer0Grad = expectedLayersGrad.layer0
     let expectedLayer1Grad = expectedLayersGrad.layer1
     let expectedLayer2Grad = expectedLayersGrad.layer2
-    // END WORKAROUND
 
     XCTAssertEqual(output, expectedOutput)
     XCTAssertEqual(inputGrad, expectedInputGrad)
