@@ -32,7 +32,9 @@ let package = Package(
       type: .dynamic,
       targets: ["Tensor"]),
   ],
-  dependencies: [],
+  dependencies: [
+    .package(name: "Benchmark", url: "https://github.com/google/swift-benchmark", .branch("master"))
+  ],
   targets: [
     .target(
       name: "Tensor",
@@ -40,6 +42,9 @@ let package = Package(
     .target(
       name: "TensorFlow",
       dependencies: ["Tensor"]),
+    .target(
+      name: "Benchmarks",
+      dependencies: ["TensorFlow", "Benchmark"]),
     .target(
       name: "Experimental",
       dependencies: [],
