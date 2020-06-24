@@ -40,6 +40,7 @@ add_library(TensorFlow SHARED
   Core/Threading.swift
   Core/Utilities.swift
 
+  Layers/AnyLayer.swift
   Layers/Convolutional.swift
   Layers/Core.swift
   Layers/Dense.swift
