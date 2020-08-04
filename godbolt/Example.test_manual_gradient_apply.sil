@@ -1,0 +1,10 @@
+sil hidden @test_manual_gradient_apply : $@convention(thin) () -> () {
+bb0:
+  %0 = float_literal $Builtin.FPIEEE32, 0x42200000 // 40 // user: %2
+  // function_ref specialized consume<A>(_:)
+  %1 = function_ref @$s7Example7consumeyyxlFSf_Tg5 : $@convention(thin) (Float) -> () // user: %3
+  %2 = struct $Float (%0 : $Builtin.FPIEEE32)     // user: %3
+  %3 = apply %1(%2) : $@convention(thin) (Float) -> ()
+  %4 = tuple ()                                   // user: %5
+  return %4 : $()                                 // id: %5
+} // end sil function 'test_manual_gradient_apply'

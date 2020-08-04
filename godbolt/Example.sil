@@ -1,0 +1,661 @@
+sil_stage canonical
+
+import Builtin
+import Swift
+import SwiftShims
+
+import _Differentiation
+
+@differentiable(wrt: x)
+@_silgen_name("foo")
+func foo(_ x: Float) -> Float
+
+struct PullbackAdd {
+  func callAsFunction(_ v: Float) -> (dlhs: Float, drhs: Float)
+  init()
+}
+
+struct PullbackMultiply {
+  @_hasStorage let lhs: Float { get }
+  @_hasStorage let rhs: Float { get }
+  func callAsFunction(_ v: Float) -> (dlhs: Float, drhs: Float)
+  init(lhs: Float, rhs: Float)
+}
+
+extension Float {
+  static func vjpAdd(_ lhs: Float, _ rhs: Float) -> (value: Float, pullback: PullbackAdd)
+  static func vjpMultiply(_ lhs: Float, _ rhs: Float) -> (value: Float, pullback: PullbackMultiply)
+}
+
+struct PullbackFoo {
+  @_hasStorage let pbMul: PullbackMultiply { get }
+  @_hasStorage let pbAdd: PullbackAdd { get }
+  func callAsFunction(_ v: Float) -> Float
+  init(pbMul: PullbackMultiply, pbAdd: PullbackAdd)
+}
+
+@_silgen_name("vjpFoo")
+func vjpFoo(_ x: Float) -> (value: Float, pullback: PullbackFoo)
+
+@_hasStorage @_hasInitialValue var blackHole: Any? { get set }
+
+@inline(never) func consume<T>(_ x: T)
+
+@_silgen_name("test_autodiff_gradient_apply")
+func test_autodiff_gradient_apply()
+
+@_silgen_name("test_manual_gradient_apply")
+func test_manual_gradient_apply()
+
+// blackHole
+sil_global hidden @$s7Example9blackHoleypSgvp : $Optional<Any>
+
+// differentiability witness for foo
+sil_differentiability_witness hidden [parameters 0] [results 0] @foo : $@convention(thin) (Float) -> Float {
+  jvp: @AD__foo__jvp_src_0_wrt_0 : $@convention(thin) (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float)
+  vjp: @AD__foo__vjp_src_0_wrt_0 : $@convention(thin) (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float)
+}
+
+// differentiability witness for static Float.+ infix(_:_:)
+sil_differentiability_witness public_external [serialized] [parameters 0 1] [results 0] @$sSf1poiyS2f_SftFZ : $@convention(method) (Float, Float, @thin Float.Type) -> Float {
+  jvp: @AD__$sSf1poiyS2f_SftFZ__jvp_src_0_wrt_0_1 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float, Float) -> Float)
+  vjp: @AD__$sSf1poiyS2f_SftFZ__vjp_src_0_wrt_0_1 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float) -> (Float, Float))
+}
+
+// differentiability witness for static Float.* infix(_:_:)
+sil_differentiability_witness public_external [serialized] [parameters 0 1] [results 0] @$sSf1moiyS2f_SftFZ : $@convention(method) (Float, Float, @thin Float.Type) -> Float {
+  jvp: @AD__$sSf1moiyS2f_SftFZ__jvp_src_0_wrt_0_1 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float, Float) -> Float)
+  vjp: @AD__$sSf1moiyS2f_SftFZ__vjp_src_0_wrt_0_1 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float) -> (Float, Float))
+}
+
+// main
+sil @main : $@convention(c) (Int32, UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>) -> Int32 {
+bb0(%0 : $Int32, %1 : $UnsafeMutablePointer<Optional<UnsafeMutablePointer<Int8>>>):
+  alloc_global @$s7Example9blackHoleypSgvp        // id: %2
+  %3 = global_addr @$s7Example9blackHoleypSgvp : $*Optional<Any> // user: %4
+  inject_enum_addr %3 : $*Optional<Any>, #Optional.none!enumelt // id: %4
+  %5 = integer_literal $Builtin.Int32, 0          // user: %6
+  %6 = struct $Int32 (%5 : $Builtin.Int32)        // user: %7
+  return %6 : $Int32                              // id: %7
+} // end sil function 'main'
+
+// foo
+sil hidden @foo : $@convention(thin) (Float) -> Float {
+// %0 "x"                                         // users: %2, %1
+bb0(%0 : $Float):
+  debug_value %0 : $Float, let, name "x", argno 1 // id: %1
+  %2 = struct_extract %0 : $Float, #Float._value  // users: %3, %3
+  %3 = builtin "fmul_FPIEEE32"(%2 : $Builtin.FPIEEE32, %2 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // users: %4, %4
+  %4 = builtin "fadd_FPIEEE32"(%3 : $Builtin.FPIEEE32, %3 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %5
+  %5 = struct $Float (%4 : $Builtin.FPIEEE32)     // users: %7, %6
+  debug_value %5 : $Float, let, name "z"          // id: %6
+  return %5 : $Float                              // id: %7
+} // end sil function 'foo'
+
+// static Float.* infix(_:_:)
+sil public_external [transparent] @$sSf1moiyS2f_SftFZ : $@convention(method) (Float, Float, @thin Float.Type) -> Float {
+// %0                                             // user: %3
+// %1                                             // user: %4
+bb0(%0 : $Float, %1 : $Float, %2 : $@thin Float.Type):
+  %3 = struct_extract %0 : $Float, #Float._value  // user: %5
+  %4 = struct_extract %1 : $Float, #Float._value  // user: %5
+  %5 = builtin "fmul_FPIEEE32"(%3 : $Builtin.FPIEEE32, %4 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %6
+  %6 = struct $Float (%5 : $Builtin.FPIEEE32)     // user: %7
+  return %6 : $Float                              // id: %7
+} // end sil function '$sSf1moiyS2f_SftFZ'
+
+// static Float.+ infix(_:_:)
+sil public_external [transparent] @$sSf1poiyS2f_SftFZ : $@convention(method) (Float, Float, @thin Float.Type) -> Float {
+// %0                                             // user: %3
+// %1                                             // user: %4
+bb0(%0 : $Float, %1 : $Float, %2 : $@thin Float.Type):
+  %3 = struct_extract %0 : $Float, #Float._value  // user: %5
+  %4 = struct_extract %1 : $Float, #Float._value  // user: %5
+  %5 = builtin "fadd_FPIEEE32"(%3 : $Builtin.FPIEEE32, %4 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %6
+  %6 = struct $Float (%5 : $Builtin.FPIEEE32)     // user: %7
+  return %6 : $Float                              // id: %7
+} // end sil function '$sSf1poiyS2f_SftFZ'
+
+// PullbackAdd.callAsFunction(_:)
+sil hidden @$s7Example11PullbackAddV14callAsFunctionySf4dlhs_Sf4drhstSfF : $@convention(method) (Float, PullbackAdd) -> (Float, Float) {
+// %0 "v"                                         // users: %3, %3, %2
+// %1 "self"
+bb0(%0 : $Float, %1 : $PullbackAdd):
+  debug_value %0 : $Float, let, name "v", argno 1 // id: %2
+  %3 = tuple (%0 : $Float, %0 : $Float)           // user: %4
+  return %3 : $(Float, Float)                     // id: %4
+} // end sil function '$s7Example11PullbackAddV14callAsFunctionySf4dlhs_Sf4drhstSfF'
+
+// PullbackAdd.init()
+sil hidden @$s7Example11PullbackAddVACycfC : $@convention(method) (@thin PullbackAdd.Type) -> PullbackAdd {
+// %0 "$metatype"
+bb0(%0 : $@thin PullbackAdd.Type):
+  %1 = struct $PullbackAdd ()                     // user: %2
+  return %1 : $PullbackAdd                        // id: %2
+} // end sil function '$s7Example11PullbackAddVACycfC'
+
+// PullbackMultiply.lhs.getter
+sil hidden [transparent] @$s7Example16PullbackMultiplyV3lhsSfvg : $@convention(method) (PullbackMultiply) -> Float {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : $PullbackMultiply):
+  debug_value %0 : $PullbackMultiply, let, name "self", argno 1 // id: %1
+  %2 = struct_extract %0 : $PullbackMultiply, #PullbackMultiply.lhs // user: %3
+  return %2 : $Float                              // id: %3
+} // end sil function '$s7Example16PullbackMultiplyV3lhsSfvg'
+
+// PullbackMultiply.rhs.getter
+sil hidden [transparent] @$s7Example16PullbackMultiplyV3rhsSfvg : $@convention(method) (PullbackMultiply) -> Float {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : $PullbackMultiply):
+  debug_value %0 : $PullbackMultiply, let, name "self", argno 1 // id: %1
+  %2 = struct_extract %0 : $PullbackMultiply, #PullbackMultiply.rhs // user: %3
+  return %2 : $Float                              // id: %3
+} // end sil function '$s7Example16PullbackMultiplyV3rhsSfvg'
+
+// PullbackMultiply.callAsFunction(_:)
+sil hidden @$s7Example16PullbackMultiplyV14callAsFunctionySf4dlhs_Sf4drhstSfF : $@convention(method) (Float, PullbackMultiply) -> (Float, Float) {
+// %0 "v"                                         // users: %5, %2
+// %1 "self"                                      // users: %9, %4, %3
+bb0(%0 : $Float, %1 : $PullbackMultiply):
+  debug_value %0 : $Float, let, name "v", argno 1 // id: %2
+  debug_value %1 : $PullbackMultiply, let, name "self", argno 2 // id: %3
+  %4 = struct_extract %1 : $PullbackMultiply, #PullbackMultiply.rhs // user: %6
+  %5 = struct_extract %0 : $Float, #Float._value  // users: %11, %7
+  %6 = struct_extract %4 : $Float, #Float._value  // user: %7
+  %7 = builtin "fmul_FPIEEE32"(%5 : $Builtin.FPIEEE32, %6 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %8
+  %8 = struct $Float (%7 : $Builtin.FPIEEE32)     // user: %13
+  %9 = struct_extract %1 : $PullbackMultiply, #PullbackMultiply.lhs // user: %10
+  %10 = struct_extract %9 : $Float, #Float._value // user: %11
+  %11 = builtin "fmul_FPIEEE32"(%5 : $Builtin.FPIEEE32, %10 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %12
+  %12 = struct $Float (%11 : $Builtin.FPIEEE32)   // user: %13
+  %13 = tuple (%8 : $Float, %12 : $Float)         // user: %14
+  return %13 : $(Float, Float)                    // id: %14
+} // end sil function '$s7Example16PullbackMultiplyV14callAsFunctionySf4dlhs_Sf4drhstSfF'
+
+// PullbackMultiply.init(lhs:rhs:)
+sil hidden @$s7Example16PullbackMultiplyV3lhs3rhsACSf_SftcfC : $@convention(method) (Float, Float, @thin PullbackMultiply.Type) -> PullbackMultiply {
+// %0 "$implicit_value"                           // user: %3
+// %1 "$implicit_value"                           // user: %3
+// %2 "$metatype"
+bb0(%0 : $Float, %1 : $Float, %2 : $@thin PullbackMultiply.Type):
+  %3 = struct $PullbackMultiply (%0 : $Float, %1 : $Float) // user: %4
+  return %3 : $PullbackMultiply                   // id: %4
+} // end sil function '$s7Example16PullbackMultiplyV3lhs3rhsACSf_SftcfC'
+
+// static Float.vjpAdd(_:_:)
+sil hidden @$sSf7ExampleE6vjpAddySf5value_AA08PullbackC0V8pullbacktSf_SftFZ : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, PullbackAdd) {
+// %0 "lhs"                                       // users: %5, %3
+// %1 "rhs"                                       // users: %6, %4
+// %2 "self"
+bb0(%0 : $Float, %1 : $Float, %2 : $@thin Float.Type):
+  debug_value %0 : $Float, let, name "lhs", argno 1 // id: %3
+  debug_value %1 : $Float, let, name "rhs", argno 2 // id: %4
+  %5 = struct_extract %0 : $Float, #Float._value  // user: %7
+  %6 = struct_extract %1 : $Float, #Float._value  // user: %7
+  %7 = builtin "fadd_FPIEEE32"(%5 : $Builtin.FPIEEE32, %6 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %8
+  %8 = struct $Float (%7 : $Builtin.FPIEEE32)     // users: %11, %9
+  debug_value %8 : $Float, let, name "value"      // id: %9
+  %10 = struct $PullbackAdd ()                    // user: %11
+  %11 = tuple (%8 : $Float, %10 : $PullbackAdd)   // user: %12
+  return %11 : $(Float, PullbackAdd)              // id: %12
+} // end sil function '$sSf7ExampleE6vjpAddySf5value_AA08PullbackC0V8pullbacktSf_SftFZ'
+
+// static Float.vjpMultiply(_:_:)
+sil hidden @$sSf7ExampleE11vjpMultiplyySf5value_AA08PullbackC0V8pullbacktSf_SftFZ : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, PullbackMultiply) {
+// %0 "lhs"                                       // users: %10, %5, %3
+// %1 "rhs"                                       // users: %10, %6, %4
+// %2 "self"
+bb0(%0 : $Float, %1 : $Float, %2 : $@thin Float.Type):
+  debug_value %0 : $Float, let, name "lhs", argno 1 // id: %3
+  debug_value %1 : $Float, let, name "rhs", argno 2 // id: %4
+  %5 = struct_extract %0 : $Float, #Float._value  // user: %7
+  %6 = struct_extract %1 : $Float, #Float._value  // user: %7
+  %7 = builtin "fmul_FPIEEE32"(%5 : $Builtin.FPIEEE32, %6 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %8
+  %8 = struct $Float (%7 : $Builtin.FPIEEE32)     // users: %11, %9
+  debug_value %8 : $Float, let, name "value"      // id: %9
+  %10 = struct $PullbackMultiply (%0 : $Float, %1 : $Float) // user: %11
+  %11 = tuple (%8 : $Float, %10 : $PullbackMultiply) // user: %12
+  return %11 : $(Float, PullbackMultiply)         // id: %12
+} // end sil function '$sSf7ExampleE11vjpMultiplyySf5value_AA08PullbackC0V8pullbacktSf_SftFZ'
+
+// PullbackFoo.pbMul.getter
+sil hidden [transparent] @$s7Example11PullbackFooV5pbMulAA0B8MultiplyVvg : $@convention(method) (PullbackFoo) -> PullbackMultiply {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : $PullbackFoo):
+  debug_value %0 : $PullbackFoo, let, name "self", argno 1 // id: %1
+  %2 = struct_extract %0 : $PullbackFoo, #PullbackFoo.pbMul // user: %3
+  return %2 : $PullbackMultiply                   // id: %3
+} // end sil function '$s7Example11PullbackFooV5pbMulAA0B8MultiplyVvg'
+
+// PullbackFoo.pbAdd.getter
+sil hidden [transparent] @$s7Example11PullbackFooV5pbAddAA0bE0Vvg : $@convention(method) (PullbackFoo) -> PullbackAdd {
+// %0 "self"                                      // users: %2, %1
+bb0(%0 : $PullbackFoo):
+  debug_value %0 : $PullbackFoo, let, name "self", argno 1 // id: %1
+  %2 = struct_extract %0 : $PullbackFoo, #PullbackFoo.pbAdd // user: %3
+  return %2 : $PullbackAdd                        // id: %3
+} // end sil function '$s7Example11PullbackFooV5pbAddAA0bE0Vvg'
+
+// PullbackFoo.callAsFunction(_:)
+sil hidden @$s7Example11PullbackFooV14callAsFunctionyS2fF : $@convention(method) (Float, PullbackFoo) -> Float {
+// %0 "v"                                         // users: %7, %5, %6, %4, %2
+// %1 "self"                                      // users: %9, %3
+bb0(%0 : $Float, %1 : $PullbackFoo):
+  debug_value %0 : $Float, let, name "v", argno 1 // id: %2
+  debug_value %1 : $PullbackFoo, let, name "self", argno 2 // id: %3
+  debug_value %0 : $Float, let, name "v", argno 1 // id: %4
+  debug_value %0 : $Float, let, name "dy1"        // id: %5
+  debug_value %0 : $Float, let, name "dy2"        // id: %6
+  %7 = struct_extract %0 : $Float, #Float._value  // users: %8, %8
+  %8 = builtin "fadd_FPIEEE32"(%7 : $Builtin.FPIEEE32, %7 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // users: %13, %16
+  %9 = struct_extract %1 : $PullbackFoo, #PullbackFoo.pbMul // users: %14, %11, %10
+  debug_value %9 : $PullbackMultiply, let, name "self", argno 2 // id: %10
+  %11 = struct_extract %9 : $PullbackMultiply, #PullbackMultiply.rhs // user: %12
+  %12 = struct_extract %11 : $Float, #Float._value // user: %13
+  %13 = builtin "fmul_FPIEEE32"(%8 : $Builtin.FPIEEE32, %12 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %17
+  %14 = struct_extract %9 : $PullbackMultiply, #PullbackMultiply.lhs // user: %15
+  %15 = struct_extract %14 : $Float, #Float._value // user: %16
+  %16 = builtin "fmul_FPIEEE32"(%8 : $Builtin.FPIEEE32, %15 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %17
+  %17 = builtin "fadd_FPIEEE32"(%13 : $Builtin.FPIEEE32, %16 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %18
+  %18 = struct $Float (%17 : $Builtin.FPIEEE32)   // users: %20, %19
+  debug_value %18 : $Float, let, name "dx"        // id: %19
+  return %18 : $Float                             // id: %20
+} // end sil function '$s7Example11PullbackFooV14callAsFunctionyS2fF'
+
+// PullbackFoo.init(pbMul:pbAdd:)
+sil hidden @$s7Example11PullbackFooV5pbMul0D3AddAcA0B8MultiplyV_AA0bF0VtcfC : $@convention(method) (PullbackMultiply, PullbackAdd, @thin PullbackFoo.Type) -> PullbackFoo {
+// %0 "$implicit_value"                           // user: %3
+// %1 "$implicit_value"                           // user: %3
+// %2 "$metatype"
+bb0(%0 : $PullbackMultiply, %1 : $PullbackAdd, %2 : $@thin PullbackFoo.Type):
+  %3 = struct $PullbackFoo (%0 : $PullbackMultiply, %1 : $PullbackAdd) // user: %4
+  return %3 : $PullbackFoo                        // id: %4
+} // end sil function '$s7Example11PullbackFooV5pbMul0D3AddAcA0B8MultiplyV_AA0bF0VtcfC'
+
+// vjpFoo
+sil hidden @vjpFoo : $@convention(thin) (Float) -> (Float, PullbackFoo) {
+// %0 "x"                                         // users: %6, %6, %4, %3, %2, %1
+bb0(%0 : $Float):
+  debug_value %0 : $Float, let, name "x", argno 1 // id: %1
+  debug_value %0 : $Float, let, name "lhs", argno 1 // id: %2
+  debug_value %0 : $Float, let, name "rhs", argno 2 // id: %3
+  %4 = struct_extract %0 : $Float, #Float._value  // users: %5, %5
+  %5 = builtin "fmul_FPIEEE32"(%4 : $Builtin.FPIEEE32, %4 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // users: %8, %8
+  %6 = struct $PullbackMultiply (%0 : $Float, %0 : $Float) // users: %7, %14
+  debug_value %6 : $PullbackMultiply, let, name "pbMul" // id: %7
+  %8 = builtin "fadd_FPIEEE32"(%5 : $Builtin.FPIEEE32, %5 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %9
+  %9 = struct $Float (%8 : $Builtin.FPIEEE32)     // users: %15, %12, %10
+  debug_value %9 : $Float, let, name "value"      // id: %10
+  %11 = struct $PullbackAdd ()                    // users: %13, %14
+  debug_value %9 : $Float, let, name "z"          // id: %12
+  debug_value %11 : $PullbackAdd, let, name "pbAdd" // id: %13
+  %14 = struct $PullbackFoo (%6 : $PullbackMultiply, %11 : $PullbackAdd) // user: %15
+  %15 = tuple (%9 : $Float, %14 : $PullbackFoo)   // user: %16
+  return %15 : $(Float, PullbackFoo)              // id: %16
+} // end sil function 'vjpFoo'
+
+// specialized consume<A>(_:)
+sil shared [noinline] @$s7Example7consumeyyxlFSf_Tg5 : $@convention(thin) (Float) -> () {
+// %0 "x"                                         // users: %6, %1
+bb0(%0 : $Float):
+  debug_value %0 : $Float, let, name "x", argno 1 // id: %1
+  %2 = global_addr @$s7Example9blackHoleypSgvp : $*Optional<Any> // user: %8
+  %3 = alloc_stack $Optional<Any>                 // users: %11, %9, %7, %4
+  %4 = init_enum_data_addr %3 : $*Optional<Any>, #Optional.some!enumelt // user: %5
+  %5 = init_existential_addr %4 : $*Any, $Float   // user: %6
+  store %0 to %5 : $*Float                        // id: %6
+  inject_enum_addr %3 : $*Optional<Any>, #Optional.some!enumelt // id: %7
+  %8 = begin_access [modify] [dynamic] %2 : $*Optional<Any> // users: %10, %9
+  copy_addr [take] %3 to %8 : $*Optional<Any>     // id: %9
+  end_access %8 : $*Optional<Any>                 // id: %10
+  dealloc_stack %3 : $*Optional<Any>              // id: %11
+  %12 = tuple ()                                  // user: %13
+  return %12 : $()                                // id: %13
+} // end sil function '$s7Example7consumeyyxlFSf_Tg5'
+
+// consume<A>(_:)
+sil hidden [noinline] @$s7Example7consumeyyxlF : $@convention(thin) <T> (@in_guaranteed T) -> () {
+// %0 "x"                                         // users: %6, %2
+bb0(%0 : $*T):
+  %1 = global_addr @$s7Example9blackHoleypSgvp : $*Optional<Any> // user: %8
+  debug_value_addr %0 : $*T, let, name "x", argno 1 // id: %2
+  %3 = alloc_stack $Optional<Any>                 // users: %11, %9, %7, %4
+  %4 = init_enum_data_addr %3 : $*Optional<Any>, #Optional.some!enumelt // user: %5
+  %5 = init_existential_addr %4 : $*Any, $T       // user: %6
+  copy_addr %0 to [initialization] %5 : $*T       // id: %6
+  inject_enum_addr %3 : $*Optional<Any>, #Optional.some!enumelt // id: %7
+  %8 = begin_access [modify] [dynamic] %1 : $*Optional<Any> // users: %10, %9
+  copy_addr [take] %3 to %8 : $*Optional<Any>     // id: %9
+  end_access %8 : $*Optional<Any>                 // id: %10
+  dealloc_stack %3 : $*Optional<Any>              // id: %11
+  %12 = tuple ()                                  // user: %13
+  return %12 : $()                                // id: %13
+} // end sil function '$s7Example7consumeyyxlF'
+
+// test_autodiff_gradient_apply
+sil hidden @test_autodiff_gradient_apply : $@convention(thin) () -> () {
+bb0:
+  // function_ref foo
+  %0 = function_ref @foo : $@convention(thin) (Float) -> Float // user: %1
+  %1 = thin_to_thick_function %0 : $@convention(thin) (Float) -> Float to $@callee_guaranteed (Float) -> Float // user: %6
+  // function_ref AD__foo__jvp_src_0_wrt_0
+  %2 = function_ref @AD__foo__jvp_src_0_wrt_0 : $@convention(thin) (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // user: %3
+  %3 = thin_to_thick_function %2 : $@convention(thin) (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) to $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // user: %6
+  // function_ref AD__foo__vjp_src_0_wrt_0
+  %4 = function_ref @AD__foo__vjp_src_0_wrt_0 : $@convention(thin) (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // user: %5
+  %5 = thin_to_thick_function %4 : $@convention(thin) (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) to $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // user: %6
+  %6 = differentiable_function [parameters 0] [results 0] %1 : $@callee_guaranteed (Float) -> Float with_derivative {%3 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float), %5 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float)} // users: %26, %24, %19, %7, %11, %15
+  %7 = differentiable_function_extract [original] %6 : $@differentiable @callee_guaranteed (Float) -> Float // users: %20, %9
+  // function_ref thunk for @escaping @callee_guaranteed (@unowned Float) -> (@unowned Float)
+  %8 = function_ref @$sS2fIegyd_S2fIegnr_TR : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> Float) -> @out Float // user: %9
+  %9 = partial_apply [callee_guaranteed] %8(%7) : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> Float) -> @out Float // user: %10
+  %10 = convert_function %9 : $@callee_guaranteed (@in_guaranteed Float) -> @out Float to $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %18
+  %11 = differentiable_function_extract [jvp] %6 : $@differentiable @callee_guaranteed (Float) -> Float // users: %21, %13
+  // function_ref thunk for @escaping @callee_guaranteed (@unowned Float) -> (@unowned Float, @owned @escaping @callee_guaranteed (@unowned Float) -> (@unowned Float))
+  %12 = function_ref @$sS4fIegyd_Iegydo_S2fxq_r0_lyS2fIsegnr_Iegnro_TR : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float)) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) // users: %16, %13
+  %13 = partial_apply [callee_guaranteed] %12(%11) : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float)) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) // user: %14
+  %14 = convert_function %13 : $@callee_guaranteed (@in_guaranteed Float) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) to $@callee_guaranteed @substituted <τ_0_0, τ_0_1, τ_0_2, τ_0_3> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_2, τ_0_3>) for <Float, Float, Float, Float> // user: %18
+  %15 = differentiable_function_extract [vjp] %6 : $@differentiable @callee_guaranteed (Float) -> Float // users: %22, %16
+  %16 = partial_apply [callee_guaranteed] %12(%15) : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float)) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) // user: %17
+  %17 = convert_function %16 : $@callee_guaranteed (@in_guaranteed Float) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) to $@callee_guaranteed @substituted <τ_0_0, τ_0_1, τ_0_2, τ_0_3> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_2, τ_0_3>) for <Float, Float, Float, Float> // user: %18
+  %18 = differentiable_function [parameters 0] [results 0] %10 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> with_derivative {%14 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1, τ_0_2, τ_0_3> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_2, τ_0_3>) for <Float, Float, Float, Float>, %17 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1, τ_0_2, τ_0_3> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_2, τ_0_3>) for <Float, Float, Float, Float>} // users: %68, %66, %64, %45, %30, %29, %28, %38, %36, %31
+  %19 = differentiable_function_extract [original] %6 : $@differentiable @callee_guaranteed (Float) -> Float // user: %23
+  strong_retain %7 : $@callee_guaranteed (Float) -> Float // id: %20
+  strong_retain %11 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // id: %21
+  strong_retain %15 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // id: %22
+  strong_release %19 : $@callee_guaranteed (Float) -> Float // id: %23
+  %24 = differentiable_function_extract [jvp] %6 : $@differentiable @callee_guaranteed (Float) -> Float // user: %25
+  strong_release %24 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // id: %25
+  %26 = differentiable_function_extract [vjp] %6 : $@differentiable @callee_guaranteed (Float) -> Float // user: %27
+  strong_release %26 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // id: %27
+  %28 = differentiable_function_extract [original] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %32
+  %29 = differentiable_function_extract [jvp] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %33
+  %30 = differentiable_function_extract [vjp] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %34
+  %31 = differentiable_function_extract [original] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %35
+  strong_retain %28 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // id: %32
+  strong_retain %29 : $@callee_guaranteed <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_0.TangentVector, τ_0_1.TangentVector>) // id: %33
+  strong_retain %30 : $@callee_guaranteed <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_1.TangentVector, τ_0_0.TangentVector>) // id: %34
+  strong_release %31 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // id: %35
+  %36 = differentiable_function_extract [jvp] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %37
+  strong_release %36 : $@callee_guaranteed <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_0.TangentVector, τ_0_1.TangentVector>) // id: %37
+  %38 = differentiable_function_extract [vjp] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %39
+  strong_release %38 : $@callee_guaranteed <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_1.TangentVector, τ_0_0.TangentVector>) // id: %39
+  %40 = float_literal $Builtin.FPIEEE32, 0x41200000 // 10 // user: %41
+  %41 = struct $Float (%40 : $Builtin.FPIEEE32)   // user: %44
+  %42 = alloc_stack $Float                        // users: %61, %59, %56
+  %43 = alloc_stack $Float                        // users: %60, %49, %44
+  store %41 to %43 : $*Float                      // id: %44
+  %45 = convert_escape_to_noescape %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> to $@differentiable @noescape @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %46
+  %46 = convert_function %45 : $@differentiable @noescape @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> to $@differentiable @noescape @callee_guaranteed (@in_guaranteed Float) -> @out Float // user: %47
+  %47 = differentiable_function_extract [vjp] %46 : $@differentiable @noescape @callee_guaranteed (@in_guaranteed Float) -> @out Float as $@noescape @callee_guaranteed (@in_guaranteed Float) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) // user: %49
+  %48 = alloc_stack $Float                        // users: %50, %49
+  %49 = apply %47(%48, %43) : $@noescape @callee_guaranteed (@in_guaranteed Float) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) // users: %57, %56
+  dealloc_stack %48 : $*Float                     // id: %50
+  %51 = alloc_stack $Float                        // users: %58, %56, %55
+  %52 = integer_literal $Builtin.Int64, 1         // user: %53
+  %53 = builtin "sitofp_Int64_FPIEEE32"(%52 : $Builtin.Int64) : $Builtin.FPIEEE32 // user: %54
+  %54 = struct $Float (%53 : $Builtin.FPIEEE32)   // user: %55
+  store %54 to %51 : $*Float                      // id: %55
+  %56 = apply %49(%42, %51) : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>
+  strong_release %49 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // id: %57
+  dealloc_stack %51 : $*Float                     // id: %58
+  %59 = load %42 : $*Float                        // user: %63
+  dealloc_stack %43 : $*Float                     // id: %60
+  dealloc_stack %42 : $*Float                     // id: %61
+  // function_ref specialized consume<A>(_:)
+  %62 = function_ref @$s7Example7consumeyyxlFSf_Tg5 : $@convention(thin) (Float) -> () // user: %63
+  %63 = apply %62(%59) : $@convention(thin) (Float) -> ()
+  %64 = differentiable_function_extract [original] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %65
+  strong_release %64 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // id: %65
+  %66 = differentiable_function_extract [jvp] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %67
+  strong_release %66 : $@callee_guaranteed <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_0.TangentVector, τ_0_1.TangentVector>) // id: %67
+  %68 = differentiable_function_extract [vjp] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %69
+  strong_release %68 : $@callee_guaranteed <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_1.TangentVector, τ_0_0.TangentVector>) // id: %69
+  %70 = tuple ()                                  // user: %71
+  return %70 : $()                                // id: %71
+} // end sil function 'test_autodiff_gradient_apply'
+
+// thunk for @escaping @callee_guaranteed (@unowned Float) -> (@unowned Float)
+sil shared [transparent] [reabstraction_thunk] @$sS2fIegyd_S2fIegnr_TR : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> Float) -> @out Float {
+// %0                                             // user: %5
+// %1                                             // user: %3
+// %2                                             // user: %4
+bb0(%0 : $*Float, %1 : $*Float, %2 : $@callee_guaranteed (Float) -> Float):
+  %3 = load %1 : $*Float                          // user: %4
+  %4 = apply %2(%3) : $@callee_guaranteed (Float) -> Float // user: %5
+  store %4 to %0 : $*Float                        // id: %5
+  %6 = tuple ()                                   // user: %7
+  return %6 : $()                                 // id: %7
+} // end sil function '$sS2fIegyd_S2fIegnr_TR'
+
+// thunk for @escaping @callee_guaranteed (@unowned Float) -> (@unowned Float, @owned @escaping @callee_guaranteed (@unowned Float) -> (@unowned Float))
+sil shared [transparent] [reabstraction_thunk] @$sS4fIegyd_Iegydo_S2fxq_r0_lyS2fIsegnr_Iegnro_TR : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float)) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) {
+// %0                                             // user: %7
+// %1                                             // user: %3
+// %2                                             // user: %4
+bb0(%0 : $*Float, %1 : $*Float, %2 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float)):
+  %3 = load %1 : $*Float                          // user: %4
+  %4 = apply %2(%3) : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // users: %6, %5
+  %5 = tuple_extract %4 : $(Float, @callee_guaranteed (Float) -> Float), 0 // user: %7
+  %6 = tuple_extract %4 : $(Float, @callee_guaranteed (Float) -> Float), 1 // user: %9
+  store %5 to %0 : $*Float                        // id: %7
+  // function_ref thunk for @escaping @callee_guaranteed (@unowned Float) -> (@unowned Float)
+  %8 = function_ref @$sS2fIegyd_S2fIegnr_TR : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> Float) -> @out Float // user: %9
+  %9 = partial_apply [callee_guaranteed] %8(%6) : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> Float) -> @out Float // user: %10
+  %10 = convert_function %9 : $@callee_guaranteed (@in_guaranteed Float) -> @out Float to $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %11
+  return %10 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // id: %11
+} // end sil function '$sS4fIegyd_Iegydo_S2fxq_r0_lyS2fIsegnr_Iegnro_TR'
+
+// test_manual_gradient_apply
+sil hidden @test_manual_gradient_apply : $@convention(thin) () -> () {
+bb0:
+  %0 = float_literal $Builtin.FPIEEE32, 0x42200000 // 40 // user: %2
+  // function_ref specialized consume<A>(_:)
+  %1 = function_ref @$s7Example7consumeyyxlFSf_Tg5 : $@convention(thin) (Float) -> () // user: %3
+  %2 = struct $Float (%0 : $Builtin.FPIEEE32)     // user: %3
+  %3 = apply %1(%2) : $@convention(thin) (Float) -> ()
+  %4 = tuple ()                                   // user: %5
+  return %4 : $()                                 // id: %5
+} // end sil function 'test_manual_gradient_apply'
+
+// AD__foo__jvp_src_0_wrt_0
+sil hidden @AD__foo__jvp_src_0_wrt_0 : $@convention(thin) (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) {
+bb0(%0 : $Float):
+  // function_ref _fatalErrorForwardModeDifferentiationDisabled
+  %1 = function_ref @_fatalErrorForwardModeDifferentiationDisabled : $@convention(thin) () -> Never // user: %2
+  %2 = apply %1() : $@convention(thin) () -> Never
+  unreachable                                     // id: %3
+} // end sil function 'AD__foo__jvp_src_0_wrt_0'
+
+// _fatalErrorForwardModeDifferentiationDisabled
+sil @_fatalErrorForwardModeDifferentiationDisabled : $@convention(thin) () -> Never
+
+// AD__foo__vjp_src_0_wrt_0
+sil hidden @AD__foo__vjp_src_0_wrt_0 : $@convention(thin) (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) {
+// %0                                             // users: %8, %8, %1
+bb0(%0 : $Float):
+  debug_value %0 : $Float, let, name "x", argno 1 // id: %1
+  %2 = metatype $@thin Float.Type                 // users: %17, %8
+  // function_ref static Float.* infix(_:_:)
+  %3 = function_ref @$sSf1moiyS2f_SftFZ : $@convention(method) (Float, Float, @thin Float.Type) -> Float // user: %6
+  // function_ref AD__$sSf1moiyS2f_SftFZ__jvp_src_0_wrt_0_1
+  %4 = function_ref @AD__$sSf1moiyS2f_SftFZ__jvp_src_0_wrt_0_1 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float, Float) -> Float) // user: %6
+  // function_ref AD__$sSf1moiyS2f_SftFZ__vjp_src_0_wrt_0_1
+  %5 = function_ref @AD__$sSf1moiyS2f_SftFZ__vjp_src_0_wrt_0_1 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float) -> (Float, Float)) // user: %6
+  %6 = differentiable_function [parameters 0 1] [results 0] %3 : $@convention(method) (Float, Float, @thin Float.Type) -> Float with_derivative {%4 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float, Float) -> Float), %5 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float) -> (Float, Float))} // user: %7
+  %7 = differentiable_function_extract [vjp] %6 : $@differentiable @convention(method) (Float, Float, @noDerivative @thin Float.Type) -> Float // user: %8
+  %8 = apply %7(%0, %0, %2) : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float) -> (Float, Float)) // users: %10, %9
+  %9 = tuple_extract %8 : $(Float, @callee_guaranteed (Float) -> (Float, Float)), 0 // users: %11, %17, %17
+  %10 = tuple_extract %8 : $(Float, @callee_guaranteed (Float) -> (Float, Float)), 1 // user: %21
+  debug_value %9 : $Float, let, name "y"          // id: %11
+  // function_ref static Float.+ infix(_:_:)
+  %12 = function_ref @$sSf1poiyS2f_SftFZ : $@convention(method) (Float, Float, @thin Float.Type) -> Float // user: %15
+  // function_ref AD__$sSf1poiyS2f_SftFZ__jvp_src_0_wrt_0_1
+  %13 = function_ref @AD__$sSf1poiyS2f_SftFZ__jvp_src_0_wrt_0_1 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float, Float) -> Float) // user: %15
+  // function_ref AD__$sSf1poiyS2f_SftFZ__vjp_src_0_wrt_0_1
+  %14 = function_ref @AD__$sSf1poiyS2f_SftFZ__vjp_src_0_wrt_0_1 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float) -> (Float, Float)) // user: %15
+  %15 = differentiable_function [parameters 0 1] [results 0] %12 : $@convention(method) (Float, Float, @thin Float.Type) -> Float with_derivative {%13 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float, Float) -> Float), %14 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float) -> (Float, Float))} // user: %16
+  %16 = differentiable_function_extract [vjp] %15 : $@differentiable @convention(method) (Float, Float, @noDerivative @thin Float.Type) -> Float // user: %17
+  %17 = apply %16(%9, %9, %2) : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float) -> (Float, Float)) // users: %19, %18
+  %18 = tuple_extract %17 : $(Float, @callee_guaranteed (Float) -> (Float, Float)), 0 // users: %20, %24
+  %19 = tuple_extract %17 : $(Float, @callee_guaranteed (Float) -> (Float, Float)), 1 // user: %21
+  debug_value %18 : $Float, let, name "z"         // id: %20
+  %21 = struct $_AD__foo_bb0__PB__src_0_wrt_0 (%10 : $@callee_guaranteed (Float) -> (Float, Float), %19 : $@callee_guaranteed (Float) -> (Float, Float)) // user: %23
+  // function_ref AD__foo__pullback_src_0_wrt_0
+  %22 = function_ref @AD__foo__pullback_src_0_wrt_0 : $@convention(thin) (Float, @owned _AD__foo_bb0__PB__src_0_wrt_0) -> Float // user: %23
+  %23 = partial_apply [callee_guaranteed] %22(%21) : $@convention(thin) (Float, @owned _AD__foo_bb0__PB__src_0_wrt_0) -> Float // user: %24
+  %24 = tuple (%18 : $Float, %23 : $@callee_guaranteed (Float) -> Float) // user: %25
+  return %24 : $(Float, @callee_guaranteed (Float) -> Float) // id: %25
+} // end sil function 'AD__foo__vjp_src_0_wrt_0'
+
+// AD__foo__pullback_src_0_wrt_0
+sil private @AD__foo__pullback_src_0_wrt_0 : $@convention(thin) (Float, @owned _AD__foo_bb0__PB__src_0_wrt_0) -> Float {
+// %0                                             // user: %4
+// %1                                             // users: %3, %2
+bb0(%0 : $Float, %1 : $_AD__foo_bb0__PB__src_0_wrt_0):
+  %2 = struct_extract %1 : $_AD__foo_bb0__PB__src_0_wrt_0, #_AD__foo_bb0__PB__src_0_wrt_0.pullback_0 // users: %13, %12
+  %3 = struct_extract %1 : $_AD__foo_bb0__PB__src_0_wrt_0, #_AD__foo_bb0__PB__src_0_wrt_0.pullback_1 // users: %5, %4
+  %4 = apply %3(%0) : $@callee_guaranteed (Float) -> (Float, Float) // users: %7, %6
+  strong_release %3 : $@callee_guaranteed (Float) -> (Float, Float) // id: %5
+  %6 = tuple_extract %4 : $(Float, Float), 0      // user: %8
+  %7 = tuple_extract %4 : $(Float, Float), 1      // user: %9
+  %8 = struct_extract %6 : $Float, #Float._value  // user: %10
+  %9 = struct_extract %7 : $Float, #Float._value  // user: %10
+  %10 = builtin "fadd_FPIEEE32"(%9 : $Builtin.FPIEEE32, %8 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %11
+  %11 = struct $Float (%10 : $Builtin.FPIEEE32)   // user: %12
+  %12 = apply %2(%11) : $@callee_guaranteed (Float) -> (Float, Float) // users: %15, %14
+  strong_release %2 : $@callee_guaranteed (Float) -> (Float, Float) // id: %13
+  %14 = tuple_extract %12 : $(Float, Float), 0    // user: %16
+  %15 = tuple_extract %12 : $(Float, Float), 1    // user: %17
+  %16 = struct_extract %14 : $Float, #Float._value // user: %18
+  %17 = struct_extract %15 : $Float, #Float._value // user: %18
+  %18 = builtin "fadd_FPIEEE32"(%17 : $Builtin.FPIEEE32, %16 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %19
+  %19 = struct $Float (%18 : $Builtin.FPIEEE32)   // user: %20
+  return %19 : $Float                             // id: %20
+} // end sil function 'AD__foo__pullback_src_0_wrt_0'
+
+// AD__$sSf1moiyS2f_SftFZ__jvp_src_0_wrt_0_1
+sil public_external [thunk] [always_inline] @AD__$sSf1moiyS2f_SftFZ__jvp_src_0_wrt_0_1 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float, Float) -> Float) {
+// %0                                             // users: %8, %3
+// %1                                             // users: %8, %4
+bb0(%0 : $Float, %1 : $Float, %2 : $@thin Float.Type):
+  %3 = struct_extract %0 : $Float, #Float._value  // user: %5
+  %4 = struct_extract %1 : $Float, #Float._value  // user: %5
+  %5 = builtin "fmul_FPIEEE32"(%3 : $Builtin.FPIEEE32, %4 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %6
+  %6 = struct $Float (%5 : $Builtin.FPIEEE32)     // user: %9
+  // function_ref closure #1 in static Float._jvpMultiply(lhs:rhs:)
+  %7 = function_ref @$sSf12_jvpMultiply3lhs3rhsSf5value_S2f_Sftc12differentialtSf_SftFZS2f_SftcfU_ : $@convention(thin) (Float, Float, Float, Float) -> Float // user: %8
+  %8 = partial_apply [callee_guaranteed] %7(%0, %1) : $@convention(thin) (Float, Float, Float, Float) -> Float // user: %9
+  %9 = tuple (%6 : $Float, %8 : $@callee_guaranteed (Float, Float) -> Float) // user: %10
+  return %9 : $(Float, @callee_guaranteed (Float, Float) -> Float) // id: %10
+} // end sil function 'AD__$sSf1moiyS2f_SftFZ__jvp_src_0_wrt_0_1'
+
+// AD__$sSf1moiyS2f_SftFZ__vjp_src_0_wrt_0_1
+sil public_external [thunk] [always_inline] @AD__$sSf1moiyS2f_SftFZ__vjp_src_0_wrt_0_1 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float) -> (Float, Float)) {
+// %0                                             // users: %8, %3
+// %1                                             // users: %8, %4
+bb0(%0 : $Float, %1 : $Float, %2 : $@thin Float.Type):
+  %3 = struct_extract %0 : $Float, #Float._value  // user: %5
+  %4 = struct_extract %1 : $Float, #Float._value  // user: %5
+  %5 = builtin "fmul_FPIEEE32"(%3 : $Builtin.FPIEEE32, %4 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %6
+  %6 = struct $Float (%5 : $Builtin.FPIEEE32)     // user: %9
+  // function_ref closure #1 in static Float._vjpMultiply(lhs:rhs:)
+  %7 = function_ref @$sSf12_vjpMultiply3lhs3rhsSf5value_Sf_SftSfc8pullbacktSf_SftFZSf_SftSfcfU_ : $@convention(thin) (Float, Float, Float) -> (Float, Float) // user: %8
+  %8 = partial_apply [callee_guaranteed] %7(%1, %0) : $@convention(thin) (Float, Float, Float) -> (Float, Float) // user: %9
+  %9 = tuple (%6 : $Float, %8 : $@callee_guaranteed (Float) -> (Float, Float)) // user: %10
+  return %9 : $(Float, @callee_guaranteed (Float) -> (Float, Float)) // id: %10
+} // end sil function 'AD__$sSf1moiyS2f_SftFZ__vjp_src_0_wrt_0_1'
+
+// AD__$sSf1poiyS2f_SftFZ__jvp_src_0_wrt_0_1
+sil public_external [thunk] [always_inline] @AD__$sSf1poiyS2f_SftFZ__jvp_src_0_wrt_0_1 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float, Float) -> Float) {
+// %0                                             // user: %3
+// %1                                             // user: %4
+bb0(%0 : $Float, %1 : $Float, %2 : $@thin Float.Type):
+  %3 = struct_extract %0 : $Float, #Float._value  // user: %5
+  %4 = struct_extract %1 : $Float, #Float._value  // user: %5
+  %5 = builtin "fadd_FPIEEE32"(%3 : $Builtin.FPIEEE32, %4 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %6
+  %6 = struct $Float (%5 : $Builtin.FPIEEE32)     // user: %9
+  // function_ref closure #1 in static Float._jvpAdd(lhs:rhs:)
+  %7 = function_ref @$sSf7_jvpAdd3lhs3rhsSf5value_S2f_Sftc12differentialtSf_SftFZS2f_SftcfU_ : $@convention(thin) (Float, Float) -> Float // user: %8
+  %8 = thin_to_thick_function %7 : $@convention(thin) (Float, Float) -> Float to $@callee_guaranteed (Float, Float) -> Float // user: %9
+  %9 = tuple (%6 : $Float, %8 : $@callee_guaranteed (Float, Float) -> Float) // user: %10
+  return %9 : $(Float, @callee_guaranteed (Float, Float) -> Float) // id: %10
+} // end sil function 'AD__$sSf1poiyS2f_SftFZ__jvp_src_0_wrt_0_1'
+
+// AD__$sSf1poiyS2f_SftFZ__vjp_src_0_wrt_0_1
+sil public_external [thunk] [always_inline] @AD__$sSf1poiyS2f_SftFZ__vjp_src_0_wrt_0_1 : $@convention(method) (Float, Float, @thin Float.Type) -> (Float, @owned @callee_guaranteed (Float) -> (Float, Float)) {
+// %0                                             // user: %3
+// %1                                             // user: %4
+bb0(%0 : $Float, %1 : $Float, %2 : $@thin Float.Type):
+  %3 = struct_extract %0 : $Float, #Float._value  // user: %5
+  %4 = struct_extract %1 : $Float, #Float._value  // user: %5
+  %5 = builtin "fadd_FPIEEE32"(%3 : $Builtin.FPIEEE32, %4 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %6
+  %6 = struct $Float (%5 : $Builtin.FPIEEE32)     // user: %9
+  // function_ref closure #1 in static Float._vjpAdd(lhs:rhs:)
+  %7 = function_ref @$sSf7_vjpAdd3lhs3rhsSf5value_Sf_SftSfc8pullbacktSf_SftFZSf_SftSfcfU_ : $@convention(thin) (Float) -> (Float, Float) // user: %8
+  %8 = thin_to_thick_function %7 : $@convention(thin) (Float) -> (Float, Float) to $@callee_guaranteed (Float) -> (Float, Float) // user: %9
+  %9 = tuple (%6 : $Float, %8 : $@callee_guaranteed (Float) -> (Float, Float)) // user: %10
+  return %9 : $(Float, @callee_guaranteed (Float) -> (Float, Float)) // id: %10
+} // end sil function 'AD__$sSf1poiyS2f_SftFZ__vjp_src_0_wrt_0_1'
+
+// closure #1 in static Float._jvpMultiply(lhs:rhs:)
+sil shared_external @$sSf12_jvpMultiply3lhs3rhsSf5value_S2f_Sftc12differentialtSf_SftFZS2f_SftcfU_ : $@convention(thin) (Float, Float, Float, Float) -> Float {
+// %0                                             // user: %8
+// %1                                             // user: %5
+// %2                                             // user: %4
+// %3                                             // user: %7
+bb0(%0 : $Float, %1 : $Float, %2 : $Float, %3 : $Float):
+  %4 = struct_extract %2 : $Float, #Float._value  // user: %6
+  %5 = struct_extract %1 : $Float, #Float._value  // user: %6
+  %6 = builtin "fmul_FPIEEE32"(%4 : $Builtin.FPIEEE32, %5 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %10
+  %7 = struct_extract %3 : $Float, #Float._value  // user: %9
+  %8 = struct_extract %0 : $Float, #Float._value  // user: %9
+  %9 = builtin "fmul_FPIEEE32"(%7 : $Builtin.FPIEEE32, %8 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %10
+  %10 = builtin "fadd_FPIEEE32"(%6 : $Builtin.FPIEEE32, %9 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %11
+  %11 = struct $Float (%10 : $Builtin.FPIEEE32)   // user: %12
+  return %11 : $Float                             // id: %12
+} // end sil function '$sSf12_jvpMultiply3lhs3rhsSf5value_S2f_Sftc12differentialtSf_SftFZS2f_SftcfU_'
+
+// closure #1 in static Float._vjpMultiply(lhs:rhs:)
+sil shared_external @$sSf12_vjpMultiply3lhs3rhsSf5value_Sf_SftSfc8pullbacktSf_SftFZSf_SftSfcfU_ : $@convention(thin) (Float, Float, Float) -> (Float, Float) {
+// %0                                             // user: %4
+// %1                                             // user: %3
+// %2                                             // user: %7
+bb0(%0 : $Float, %1 : $Float, %2 : $Float):
+  %3 = struct_extract %1 : $Float, #Float._value  // user: %5
+  %4 = struct_extract %0 : $Float, #Float._value  // users: %8, %5
+  %5 = builtin "fmul_FPIEEE32"(%3 : $Builtin.FPIEEE32, %4 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %6
+  %6 = struct $Float (%5 : $Builtin.FPIEEE32)     // user: %10
+  %7 = struct_extract %2 : $Float, #Float._value  // user: %8
+  %8 = builtin "fmul_FPIEEE32"(%7 : $Builtin.FPIEEE32, %4 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %9
+  %9 = struct $Float (%8 : $Builtin.FPIEEE32)     // user: %10
+  %10 = tuple (%6 : $Float, %9 : $Float)          // user: %11
+  return %10 : $(Float, Float)                    // id: %11
+} // end sil function '$sSf12_vjpMultiply3lhs3rhsSf5value_Sf_SftSfc8pullbacktSf_SftFZSf_SftSfcfU_'
+
+// closure #1 in static Float._jvpAdd(lhs:rhs:)
+sil shared_external @$sSf7_jvpAdd3lhs3rhsSf5value_S2f_Sftc12differentialtSf_SftFZS2f_SftcfU_ : $@convention(thin) (Float, Float) -> Float {
+// %0                                             // user: %2
+// %1                                             // user: %3
+bb0(%0 : $Float, %1 : $Float):
+  %2 = struct_extract %0 : $Float, #Float._value  // user: %4
+  %3 = struct_extract %1 : $Float, #Float._value  // user: %4
+  %4 = builtin "fadd_FPIEEE32"(%2 : $Builtin.FPIEEE32, %3 : $Builtin.FPIEEE32) : $Builtin.FPIEEE32 // user: %5
+  %5 = struct $Float (%4 : $Builtin.FPIEEE32)     // user: %6
+  return %5 : $Float                              // id: %6
+} // end sil function '$sSf7_jvpAdd3lhs3rhsSf5value_S2f_Sftc12differentialtSf_SftFZS2f_SftcfU_'
+
+// closure #1 in static Float._vjpAdd(lhs:rhs:)
+sil shared_external @$sSf7_vjpAdd3lhs3rhsSf5value_Sf_SftSfc8pullbacktSf_SftFZSf_SftSfcfU_ : $@convention(thin) (Float) -> (Float, Float) {
+// %0                                             // users: %1, %1
+bb0(%0 : $Float):
+  %1 = tuple (%0 : $Float, %0 : $Float)           // user: %2
+  return %1 : $(Float, Float)                     // id: %2
+} // end sil function '$sSf7_vjpAdd3lhs3rhsSf5value_Sf_SftSfc8pullbacktSf_SftFZSf_SftSfcfU_'
+
+
+
+// Mappings from '#fileID' to '#filePath':
+//   'Example/Example.swift' => 'Sources/AutoDiffBenchmark/Example.swift'
+
+

@@ -1,0 +1,81 @@
+sil hidden @test_autodiff_gradient_apply : $@convention(thin) () -> () {
+bb0:
+  // function_ref foo
+  %0 = function_ref @foo : $@convention(thin) (Float) -> Float // user: %1
+  %1 = thin_to_thick_function %0 : $@convention(thin) (Float) -> Float to $@callee_guaranteed (Float) -> Float // user: %6
+  // function_ref AD__foo__jvp_src_0_wrt_0
+  %2 = function_ref @AD__foo__jvp_src_0_wrt_0 : $@convention(thin) (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // user: %3
+  %3 = thin_to_thick_function %2 : $@convention(thin) (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) to $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // user: %6
+  // function_ref AD__foo__vjp_src_0_wrt_0
+  %4 = function_ref @AD__foo__vjp_src_0_wrt_0 : $@convention(thin) (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // user: %5
+  %5 = thin_to_thick_function %4 : $@convention(thin) (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) to $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // user: %6
+  %6 = differentiable_function [parameters 0] [results 0] %1 : $@callee_guaranteed (Float) -> Float with_derivative {%3 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float), %5 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float)} // users: %26, %24, %19, %7, %11, %15
+  %7 = differentiable_function_extract [original] %6 : $@differentiable @callee_guaranteed (Float) -> Float // users: %20, %9
+  // function_ref thunk for @escaping @callee_guaranteed (@unowned Float) -> (@unowned Float)
+  %8 = function_ref @$sS2fIegyd_S2fIegnr_TR : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> Float) -> @out Float // user: %9
+  %9 = partial_apply [callee_guaranteed] %8(%7) : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> Float) -> @out Float // user: %10
+  %10 = convert_function %9 : $@callee_guaranteed (@in_guaranteed Float) -> @out Float to $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %18
+  %11 = differentiable_function_extract [jvp] %6 : $@differentiable @callee_guaranteed (Float) -> Float // users: %21, %13
+  // function_ref thunk for @escaping @callee_guaranteed (@unowned Float) -> (@unowned Float, @owned @escaping @callee_guaranteed (@unowned Float) -> (@unowned Float))
+  %12 = function_ref @$sS4fIegyd_Iegydo_S2fxq_r0_lyS2fIsegnr_Iegnro_TR : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float)) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) // users: %16, %13
+  %13 = partial_apply [callee_guaranteed] %12(%11) : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float)) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) // user: %14
+  %14 = convert_function %13 : $@callee_guaranteed (@in_guaranteed Float) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) to $@callee_guaranteed @substituted <τ_0_0, τ_0_1, τ_0_2, τ_0_3> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_2, τ_0_3>) for <Float, Float, Float, Float> // user: %18
+  %15 = differentiable_function_extract [vjp] %6 : $@differentiable @callee_guaranteed (Float) -> Float // users: %22, %16
+  %16 = partial_apply [callee_guaranteed] %12(%15) : $@convention(thin) (@in_guaranteed Float, @guaranteed @callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float)) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) // user: %17
+  %17 = convert_function %16 : $@callee_guaranteed (@in_guaranteed Float) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) to $@callee_guaranteed @substituted <τ_0_0, τ_0_1, τ_0_2, τ_0_3> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_2, τ_0_3>) for <Float, Float, Float, Float> // user: %18
+  %18 = differentiable_function [parameters 0] [results 0] %10 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> with_derivative {%14 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1, τ_0_2, τ_0_3> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_2, τ_0_3>) for <Float, Float, Float, Float>, %17 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1, τ_0_2, τ_0_3> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_2, τ_0_3>) for <Float, Float, Float, Float>} // users: %68, %66, %64, %45, %30, %29, %28, %38, %36, %31
+  %19 = differentiable_function_extract [original] %6 : $@differentiable @callee_guaranteed (Float) -> Float // user: %23
+  strong_retain %7 : $@callee_guaranteed (Float) -> Float // id: %20
+  strong_retain %11 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // id: %21
+  strong_retain %15 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // id: %22
+  strong_release %19 : $@callee_guaranteed (Float) -> Float // id: %23
+  %24 = differentiable_function_extract [jvp] %6 : $@differentiable @callee_guaranteed (Float) -> Float // user: %25
+  strong_release %24 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // id: %25
+  %26 = differentiable_function_extract [vjp] %6 : $@differentiable @callee_guaranteed (Float) -> Float // user: %27
+  strong_release %26 : $@callee_guaranteed (Float) -> (Float, @owned @callee_guaranteed (Float) -> Float) // id: %27
+  %28 = differentiable_function_extract [original] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %32
+  %29 = differentiable_function_extract [jvp] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %33
+  %30 = differentiable_function_extract [vjp] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %34
+  %31 = differentiable_function_extract [original] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %35
+  strong_retain %28 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // id: %32
+  strong_retain %29 : $@callee_guaranteed <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_0.TangentVector, τ_0_1.TangentVector>) // id: %33
+  strong_retain %30 : $@callee_guaranteed <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_1.TangentVector, τ_0_0.TangentVector>) // id: %34
+  strong_release %31 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // id: %35
+  %36 = differentiable_function_extract [jvp] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %37
+  strong_release %36 : $@callee_guaranteed <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_0.TangentVector, τ_0_1.TangentVector>) // id: %37
+  %38 = differentiable_function_extract [vjp] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %39
+  strong_release %38 : $@callee_guaranteed <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_1.TangentVector, τ_0_0.TangentVector>) // id: %39
+  %40 = float_literal $Builtin.FPIEEE32, 0x41200000 // 10 // user: %41
+  %41 = struct $Float (%40 : $Builtin.FPIEEE32)   // user: %44
+  %42 = alloc_stack $Float                        // users: %61, %59, %56
+  %43 = alloc_stack $Float                        // users: %60, %49, %44
+  store %41 to %43 : $*Float                      // id: %44
+  %45 = convert_escape_to_noescape %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> to $@differentiable @noescape @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %46
+  %46 = convert_function %45 : $@differentiable @noescape @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> to $@differentiable @noescape @callee_guaranteed (@in_guaranteed Float) -> @out Float // user: %47
+  %47 = differentiable_function_extract [vjp] %46 : $@differentiable @noescape @callee_guaranteed (@in_guaranteed Float) -> @out Float as $@noescape @callee_guaranteed (@in_guaranteed Float) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) // user: %49
+  %48 = alloc_stack $Float                        // users: %50, %49
+  %49 = apply %47(%48, %43) : $@noescape @callee_guaranteed (@in_guaranteed Float) -> (@out Float, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>) // users: %57, %56
+  dealloc_stack %48 : $*Float                     // id: %50
+  %51 = alloc_stack $Float                        // users: %58, %56, %55
+  %52 = integer_literal $Builtin.Int64, 1         // user: %53
+  %53 = builtin "sitofp_Int64_FPIEEE32"(%52 : $Builtin.Int64) : $Builtin.FPIEEE32 // user: %54
+  %54 = struct $Float (%53 : $Builtin.FPIEEE32)   // user: %55
+  store %54 to %51 : $*Float                      // id: %55
+  %56 = apply %49(%42, %51) : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float>
+  strong_release %49 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // id: %57
+  dealloc_stack %51 : $*Float                     // id: %58
+  %59 = load %42 : $*Float                        // user: %63
+  dealloc_stack %43 : $*Float                     // id: %60
+  dealloc_stack %42 : $*Float                     // id: %61
+  // function_ref specialized consume<A>(_:)
+  %62 = function_ref @$s7Example7consumeyyxlFSf_Tg5 : $@convention(thin) (Float) -> () // user: %63
+  %63 = apply %62(%59) : $@convention(thin) (Float) -> ()
+  %64 = differentiable_function_extract [original] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %65
+  strong_release %64 : $@callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // id: %65
+  %66 = differentiable_function_extract [jvp] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %67
+  strong_release %66 : $@callee_guaranteed <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_0.TangentVector, τ_0_1.TangentVector>) // id: %67
+  %68 = differentiable_function_extract [vjp] %18 : $@differentiable @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <Float, Float> // user: %69
+  strong_release %68 : $@callee_guaranteed <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> (@out τ_0_1, @owned @callee_guaranteed @substituted <τ_0_0, τ_0_1> (@in_guaranteed τ_0_0) -> @out τ_0_1 for <τ_0_1.TangentVector, τ_0_0.TangentVector>) // id: %69
+  %70 = tuple ()                                  // user: %71
+  return %70 : $()                                // id: %71
+} // end sil function 'test_autodiff_gradient_apply'
