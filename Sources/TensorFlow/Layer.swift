@@ -95,6 +95,8 @@ public protocol Layer: Module where Input: Differentiable {
 }
 
 extension Layer {
+  // Workaround for SR-13455: autodiff undefined symbol linker error.
+  @differentiable(wrt: self)
   @differentiable
   public func forward(_ input: Input) -> Output {
     return callAsFunction(input)
@@ -102,6 +104,8 @@ extension Layer {
 }
 
 extension Layer where Input: DifferentiableTensorProtocol, Output: DifferentiableTensorProtocol {
+  // Workaround for SR-13455: autodiff undefined symbol linker error.
+  @differentiable(wrt: self)
   @differentiable
   public func callAsFunction(_ input: Input) -> Output {
     let activation = forward(input)
