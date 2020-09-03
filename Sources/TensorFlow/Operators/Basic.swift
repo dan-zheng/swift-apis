@@ -640,6 +640,19 @@ extension Tensor {
     return flatResult.reshaped(toShape: batchIndices.shapeTensor.concatenated(with: outerShape))
   }
 
+  @derivative(of: batchGathering, wrt: self)
+  @usableFromInline
+  func _jvpBatchGathering<Index: TensorFlowIndex>(
+    atIndices indices: Tensor<Index>,
+    alongAxis axis: Int = 1,
+    batchDimensionCount: Int = 1
+  ) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector) -> Tensor<Scalar>
+  ) where Scalar: TensorFlowFloatingPoint {
+    fatalError("Unimplemented forward-mode derivative")
+  }
+
   /// Returns a tensor by gathering the values after applying the provided boolean mask to the input.
   ///
   /// For example:

@@ -120,6 +120,24 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
     }
   }
 
+  @derivative(of: callAsFunction, wrt: self)
+  @usableFromInline
+  func _jvpCallAsFunction(_ input: Tensor<Scalar>) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector) -> Tensor<Scalar>
+  ) {
+    fatalError("Unimplemented forward-mode derivative")
+  }
+
+  @derivative(of: callAsFunction)
+  @usableFromInline
+  func _jvpCallAsFunction(_ input: Tensor<Scalar>) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector, Tensor<Scalar>) -> Tensor<Scalar>
+  ) {
+    fatalError("Unimplemented forward-mode derivative")
+  }
+
   private func doTraining(
     _ input: Tensor<Scalar>, offset: Tensor<Scalar>, scale: Tensor<Scalar>, axis: Int
   ) -> Tensor<Scalar> {
@@ -146,6 +164,16 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
       varianceEpsilon: eps)
   }
 
+  @derivative(of: doTraining)
+  private func _jvpDoTraining(
+    _ input: Tensor<Scalar>, offset: Tensor<Scalar>, scale: Tensor<Scalar>, axis: Int
+  ) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector, Tensor<Scalar>, Tensor<Scalar>, Tensor<Scalar>) -> Tensor<Scalar>
+  ) {
+    fatalError("Unimplemented forward-mode derivative")
+  }
+
   private func doInference(
     _ input: Tensor<Scalar>, offset: Tensor<Scalar>, scale: Tensor<Scalar>
   ) -> Tensor<Scalar> {
@@ -160,6 +188,16 @@ public struct BatchNorm<Scalar: TensorFlowFloatingPoint>: Layer {
       mean: runningMeanValue, variance: runningVarianceValue,
       offset: offset, scale: scale,
       varianceEpsilon: eps)
+  }
+
+  @derivative(of: doInference)
+  private func _jvpDoInference(
+    _ input: Tensor<Scalar>, offset: Tensor<Scalar>, scale: Tensor<Scalar>
+  ) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector, Tensor<Scalar>, Tensor<Scalar>, Tensor<Scalar>) -> Tensor<Scalar>
+  ) {
+    fatalError("Unimplemented forward-mode derivative")
   }
 
   /// Creates a batch normalization layer.

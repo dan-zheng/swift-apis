@@ -62,6 +62,24 @@ public struct Dropout<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer {
       return input
     }
   }
+
+  @derivative(of: callAsFunction, wrt: self)
+  @usableFromInline
+  func _jvpCallAsFunction(_ input: Tensor<Scalar>) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector) -> Tensor<Scalar>
+  ) {
+    fatalError("Unimplemented forward-mode derivative")
+  }
+
+  @derivative(of: callAsFunction)
+  @usableFromInline
+  func _jvpCallAsFunction(_ input: Tensor<Scalar>) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector, Tensor<Scalar>) -> Tensor<Scalar>
+  ) {
+    fatalError("Unimplemented forward-mode derivative")
+  }
 }
 
 /// `GaussianNoise` adds noise sampled from a normal distribution.
@@ -91,6 +109,24 @@ public struct GaussianNoise<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer
     case .inference:
       return input
     }
+  }
+
+  @derivative(of: callAsFunction, wrt: self)
+  @usableFromInline
+  func _jvpCallAsFunction(_ input: Tensor<Scalar>) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector) -> Tensor<Scalar>
+  ) {
+    fatalError("Unimplemented forward-mode derivative")
+  }
+
+  @derivative(of: callAsFunction)
+  @usableFromInline
+  func _jvpCallAsFunction(_ input: Tensor<Scalar>) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector, Tensor<Scalar>) -> Tensor<Scalar>
+  ) {
+    fatalError("Unimplemented forward-mode derivative")
   }
 }
 
@@ -128,6 +164,24 @@ public struct GaussianDropout<Scalar: TensorFlowFloatingPoint>: ParameterlessLay
     case .inference:
       return input
     }
+  }
+
+  @derivative(of: callAsFunction, wrt: self)
+  @usableFromInline
+  func _jvpCallAsFunction(_ input: Tensor<Scalar>) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector) -> Tensor<Scalar>
+  ) {
+    fatalError("Unimplemented forward-mode derivative")
+  }
+
+  @derivative(of: callAsFunction)
+  @usableFromInline
+  func _jvpCallAsFunction(_ input: Tensor<Scalar>) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector, Tensor<Scalar>) -> Tensor<Scalar>
+  ) {
+    fatalError("Unimplemented forward-mode derivative")
   }
 }
 
@@ -180,5 +234,23 @@ public struct AlphaDropout<Scalar: TensorFlowFloatingPoint>: ParameterlessLayer 
     case .inference:
       return input
     }
+  }
+
+  @derivative(of: callAsFunction, wrt: self)
+  @usableFromInline
+  func _jvpCallAsFunction(_ input: Tensor<Scalar>) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector) -> Tensor<Scalar>
+  ) {
+    fatalError("Unimplemented forward-mode derivative")
+  }
+
+  @derivative(of: callAsFunction)
+  @usableFromInline
+  func _jvpCallAsFunction(_ input: Tensor<Scalar>) -> (
+    value: Tensor<Scalar>,
+    differential: (TangentVector, Tensor<Scalar>) -> Tensor<Scalar>
+  ) {
+    fatalError("Unimplemented forward-mode derivative")
   }
 }
