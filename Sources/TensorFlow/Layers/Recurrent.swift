@@ -84,6 +84,18 @@ extension RecurrentLayerCell {
     self(RNNCellInput(input: input, state: state))
   }
 
+  @derivative(of: callAsFunction)
+  public func jvpCallAsFunction(
+    input: TimeStepInput,
+    state: State
+  ) -> (
+    value: RNNCellOutput<TimeStepOutput, State>,
+    differential:
+      (TangentVector, TimeStepInput.TangentVector, State.TangentVector) -> RNNCellOutput<TimeStepOutput, State>.TangentVector
+  ) {
+    fatalError()
+  }
+
   @differentiable
   public func call(input: TimeStepInput, state: State) -> RNNCellOutput<TimeStepOutput, State> {
     self(RNNCellInput(input: input, state: state))
