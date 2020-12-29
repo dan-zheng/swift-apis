@@ -64,20 +64,25 @@ class OptimizerTests: XCTestCase {
       .reshaped(to: [-1, 1])
     let y: Tensor<Float> = x + 1
 
-    for _ in 0..<stepCount {
+    for i in 0..<stepCount {
       let grad = gradient(at: model) { model -> Tensor<Float> in
         let yy = model(x)
         return meanSquaredError(predicted: yy, expected: y)
       }
+      dump(model)
+      dump(grad)
       optimizer.update(&model, along: grad)
 
       // Break if model has converged.
       if model(x).isAlmostEqual(to: y) {
+        print("Converging at step \(i)")
         break
       }
     }
 
     // Check that model has converged.
+    print("model(x)", model(x))
+    print("y", y)
     XCTAssertTrue(model(x).isAlmostEqual(to: y), file: file, line: line)
   }
 
@@ -112,9 +117,24 @@ class OptimizerTests: XCTestCase {
   }
 
   func testAdaMax() {
-    let model = Model()
+    var model = Model()
     let optimizer = AdaMax(for: model)
     testConvergence(optimizer: optimizer, model: model)
+
+/*
+    let x: Tensor<Float> = Tensor(rangeFrom: -1, to: 1, stride: 0.01)
+      .reshaped(to: [-1, 1])
+    let y: Tensor<Float> = x + 1
+    for _ in 0..<100 {
+    let grad = gradient(at: model) { model -> Tensor<Float> in
+      let yy = model(x)
+      return meanSquaredError(predicted: yy, expected: y)
+    }
+    dump(grad)
+    model.move(along: grad)
+    dump(model)
+    }
+*/
   }
 
   func testAMSGrad() {

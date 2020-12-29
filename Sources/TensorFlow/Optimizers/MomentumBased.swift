@@ -449,6 +449,16 @@ where
 
     // Update `infinityNorm` using a key path approach because `max(_:_:)` cannot be 
     // currently applied in a simpler manner.
+    print("direction")
+    dump(direction)
+    print("learningRate")
+    dump(learningRate)
+    print("stepSize")
+    dump(stepSize)
+    print("firstMoments")
+    dump(firstMoments)
+    print("InfinityNorm")
+    dump(infinityNorm)
     for kp in infinityNorm.recursivelyAllWritableKeyPaths(to: Tensor<Float>.self) {
       infinityNorm[keyPath: kp] = max(
         beta2 * infinityNorm[keyPath: kp], abs(direction[keyPath: kp]))
