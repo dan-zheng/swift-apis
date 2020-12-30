@@ -16,6 +16,12 @@
 // limitations under the License.
 
 import PackageDescription
+import Foundation
+import Darwin.C
+
+// ProcessInfo.processInfo.environment["DYLD_LIBRARY_PATH"] = "/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2020-12-20-a.xctoolchain/usr/lib/swift/macosx"
+
+setenv("DYLD_LIBRARY_PATH", "/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2020-12-20-a.xctoolchain/usr/lib/swift/macosx", 1)
 
 let package = Package(
   name: "TensorFlow",
@@ -38,6 +44,12 @@ let package = Package(
   ],
   targets: [
     .target(
+      name: "_Differentiation",
+      dependencies: [],
+      swiftSettings: [
+        .unsafeFlags(["-parse-stdlib"]),
+      ]),
+    .target(
       name: "Tensor",
       dependencies: []),
     .target(
@@ -46,6 +58,7 @@ let package = Package(
     .target(
       name: "TensorFlow",
       dependencies: [
+        "_Differentiation",
         "Tensor",
         "PythonKit",
         "CTensorFlow",
