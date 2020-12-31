@@ -15,7 +15,7 @@
 import _Differentiation
 import Foundation
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
-import Numerics
+// import Numerics
 #endif
 
 public protocol Module: EuclideanDifferentiable, KeyPathIterable

@@ -14,7 +14,7 @@
 
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
 
-import Numerics
+// import Numerics
 @_spi(Reflection) import Swift
 
 extension ElementaryFunctions {

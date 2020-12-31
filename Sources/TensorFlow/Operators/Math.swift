@@ -14,7 +14,7 @@
 
 import _Differentiation
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
-import Numerics
+// import Numerics
 #endif
 
 infix operator .>: ComparisonPrecedence

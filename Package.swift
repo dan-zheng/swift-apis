@@ -30,6 +30,11 @@ let package = Package(
   ],
   products: [
     .library(
+      name: "_Differentiation",
+      type: .dynamic,
+      // type: .static,
+      targets: ["swift_Differentiation"]),
+    .library(
       name: "TensorFlow",
       type: .dynamic,
       targets: ["TensorFlow"]),
@@ -39,15 +44,18 @@ let package = Package(
       targets: ["Tensor"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/apple/swift-numerics", .branch("main")),
+    // .package(url: "https://github.com/apple/swift-numerics", .branch("main")),
     .package(url: "https://github.com/pvieito/PythonKit.git", .branch("master")),
   ],
   targets: [
     .target(
-      name: "_Differentiation",
+      name: "swift_Differentiation",
       dependencies: [],
+      path: "Sources/_Differentiation",
       swiftSettings: [
         .unsafeFlags(["-parse-stdlib"]),
+        .unsafeFlags(["-module-name", "_Differentiation"]),
+        // .unsafeFlags(["-module-link-name", "swift_Differentiation"]),
       ]),
     .target(
       name: "Tensor",
@@ -58,24 +66,24 @@ let package = Package(
     .target(
       name: "TensorFlow",
       dependencies: [
-        "_Differentiation",
+        "swift_Differentiation",
         "Tensor",
         "PythonKit",
         "CTensorFlow",
-        .product(name: "Numerics", package: "swift-numerics"),
+        // .product(name: "Numerics", package: "swift-numerics"),
       ]),
     .target(
       name: "Experimental",
-      dependencies: [],
+      dependencies: ["swift_Differentiation"],
       path: "Sources/third_party/Experimental"),
     .testTarget(
       name: "ExperimentalTests",
-      dependencies: ["Experimental"]),
+      dependencies: ["swift_Differentiation", "Experimental"]),
     .testTarget(
       name: "TensorTests",
-      dependencies: ["Tensor"]),
+      dependencies: ["swift_Differentiation", "Tensor"]),
     .testTarget(
       name: "TensorFlowTests",
-      dependencies: ["TensorFlow"]),
+      dependencies: ["TensorFlow", "swift_Differentiation"]),
   ]
 )

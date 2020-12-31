@@ -16,6 +16,7 @@ import XCTest
 
 @testable import TensorFlow
 
+/*
 final class MathOperatorTests: XCTestCase {
   func testElementaryFunction(
     name: String,
@@ -689,3 +690,4 @@ final class MathOperatorTests: XCTestCase {
     ("testBroadcastedAddGradient", testBroadcastedAddGradient),
   ]
 }
+*/

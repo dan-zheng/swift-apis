@@ -15,7 +15,7 @@
 import _Differentiation
 import TensorFlow
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
-import Numerics
+// import Numerics
 #endif
 @_exported import x10_optimizers_tensor_visitor_plan
 

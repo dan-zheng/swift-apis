@@ -15,7 +15,7 @@
 import _Differentiation
 import CTensorFlow
 #if TENSORFLOW_USE_STANDARD_TOOLCHAIN
-import Numerics
+// import Numerics
 #endif
 
 /// A TensorFlow dynamic type value that can be created from types that conform to
