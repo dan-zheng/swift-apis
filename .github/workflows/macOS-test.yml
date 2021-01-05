@@ -1,4 +1,4 @@
-name: macOS
+name: macOS (CMake toolchain)
 
 on:
   pull_request:
@@ -11,24 +11,74 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install swift-DEVELOPMENT-SNAPSHOT-2020-12-14-a
+      - name: Set environment variables
         run: |
-          curl -sOL https://swift.org/builds/development/xcode/swift-DEVELOPMENT-SNAPSHOT-2020-12-14-a/swift-DEVELOPMENT-SNAPSHOT-2020-12-14-a-osx.pkg
-          xattr -dr com.apple.quarantine swift-DEVELOPMENT-SNAPSHOT-2020-12-14-a-osx.pkg
-          installer -pkg swift-DEVELOPMENT-SNAPSHOT-2020-12-14-a-osx.pkg -target CurrentUserHomeDirectory
-      - name: Set Environment Variables
-        run: |
-          echo "TOOLCHAINS=..." > $GITHUB_ENV
+          # DATE: hardcoded date selecting the latest toolchain from https://swift.org/download/#snapshots.
+          DATE=2021-01-04
+          # SHORT_DATE: DATE with hypens removed. Used for toolchain identifier and version.
+          SHORT_DATE="${DATE//-/}"
+          TOOLCHAIN_NAME=swift-DEVELOPMENT-SNAPSHOT-${DATE}-a
+          echo "DATE=${DATE}" >> $GITHUB_ENV
+          echo "SHORT_DATE=${SHORT_DATE}" >> $GITHUB_ENV
+          echo "TOOLCHAIN_NAME=${TOOLCHAIN_NAME}" >> $GITHUB_ENV
+          echo "SWIFT_APIS_BUILD_DIR=/tmp/BinaryCache/tensorflow-swift-apis" >> $GITHUB_ENV
+          echo "TOOLCHAIN_ROOT_LOCATION=/Library/Developer/Toolchains/${TOOLCHAIN_NAME}.xctoolchain" >> $GITHUB_ENV
+          echo "TOOLCHAIN_HOME_LOCATION=$HOME/Library/Developer/Toolchains/${TOOLCHAIN_NAME}.xctoolchain" >> $GITHUB_ENV
 
-      - name: Install X10
+      - name: Install Ninja
+        run: |
+          brew install ninja
+
+      - name: Install swift.org toolchain
+        run: |
+          curl -sOL https://swift.org/builds/development/xcode/${TOOLCHAIN_NAME}/${TOOLCHAIN_NAME}-osx.pkg
+          xattr -dr com.apple.quarantine ${TOOLCHAIN_NAME}-osx.pkg
+          installer -pkg ${TOOLCHAIN_NAME}-osx.pkg -target CurrentUserHomeDirectory
+          rm -rf ${TOOLCHAIN_NAME}-osx.pkg
+
+      - name: Install pre-built TensorFlow and X10 libraries
         run: |
           curl -sL https://artprodeus21.artifacts.visualstudio.com/A8fd008a0-56bc-482c-ba46-67f9425510be/3133d6ab-80a8-4996-ac4f-03df25cd3224/_apis/artifact/cGlwZWxpbmVhcnRpZmFjdDovL2NvbXBuZXJkL3Byb2plY3RJZC8zMTMzZDZhYi04MGE4LTQ5OTYtYWM0Zi0wM2RmMjVjZDMyMjQvYnVpbGRJZC80NTU3NC9hcnRpZmFjdE5hbWUvdGVuc29yZmxvdy1kYXJ3aW4teDY00/content?format=zip -o tensorflow-darwin-x64.zip
           unzip tensorflow-darwin-x64.zip
           mv tensorflow-darwin-x64/Library/tensorflow-2.4.0 ~/Library/
 
-      - name: Build
+      - name: Build tensorflow/swift-apis via CMake
         run: |
-          TOOLCHAINS=org.swift.50202012141a swift build -v -Xswiftc -DTENSORFLOW_USE_STANDARD_TOOLCHAIN -Xcc -I${HOME}/Library/tensorflow-2.4.0/usr/include -Xlinker -L${HOME}/Library/tensorflow-2.4.0/usr/lib
-    # - name: Run tests
-    #   run: |
-    #     DYLD_LIBRARY_PATH=${HOME}/Library/tensorflow-2.4.0/usr/lib TOOLCHAINS=org.swift.50202012141a swift test -v -Xswiftc -DTENSORFLOW_USE_STANDARD_TOOLCHAIN -Xcc -I${HOME}/Library/tensorflow-2.4.0/usr/include -Xlinker -L${HOME}/Library/tensorflow-2.4.0/usr/lib
+          set -euxo pipefail
+          mkdir -p $SWIFT_APIS_BUILD_DIR
+          cmake \
+            -B $SWIFT_APIS_BUILD_DIR \
+            -D BUILD_SHARED_LIBS=YES \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_INSTALL_PREFIX=${TOOLCHAIN_HOME_LOCATION}/usr \
+            -D CMAKE_Swift_COMPILER=${TOOLCHAIN_HOME_LOCATION}/usr/bin/swiftc \
+            -D CMAKE_OSX_DEPLOYMENT_TARGET=10.9 \
+            -D TENSORFLOW_USE_STANDARD_TOOLCHAIN=YES \
+            -D X10_LIBRARY=${HOME}/Library/tensorflow-2.4.0/usr/lib/libx10.dylib \
+            -D X10_INCLUDE_DIRS=${HOME}/Library/tensorflow-2.4.0/usr/include \
+            -D BUILD_TESTING=NO \
+            -G Ninja \
+            -S .
+
+      - name: Install tensorflow/swift-apis into toolchain
+        run: |
+          set -euxo pipefail
+          cmake --build $SWIFT_APIS_BUILD_DIR --target install
+
+      - name: Build toolchain package installer
+        run: |
+          set -euxo pipefail
+          pkgbuild --identifier org.tensorflow-${SHORT_DATE} \
+                   --install-location ${TOOLCHAIN_ROOT_LOCATION} \
+                   --version 5.0.${SHORT_DATE} \
+                   --root ${TOOLCHAIN_HOME_LOCATION} \
+                   ${TOOLCHAIN_NAME}-osx.pkg
+          pwd
+          ls -alh
+
+      - name: Upload toolchain package installer 🐦
+        uses: actions/upload-artifact@v2
+        with:
+          # name: swift-TENSORFLOW-DEVELOPMENT-osx.pkg
+          name: swift-DEVELOPMENT-SNAPSHOT-{{ env.DATE }}-a-osx.pkg
+          path: '*.pkg'
