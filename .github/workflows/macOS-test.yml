@@ -1,4 +1,4 @@
-name: macOS
+name: macOS test
 
 on:
   pull_request:
@@ -18,6 +18,8 @@ jobs:
           installer -pkg swift-DEVELOPMENT-SNAPSHOT-2020-12-14-a-osx.pkg -target CurrentUserHomeDirectory
       - name: Set Environment Variables
         run: |
+          export TOOLCHAIN_NAME=$(echo $HOME/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-* | sed -e 's#.*/Library#/Library#')
+          export DATE=$(date -j +%Y%m%d)
           echo "TOOLCHAINS=..." > $GITHUB_ENV
 
       - name: Install X10
@@ -26,9 +28,37 @@ jobs:
           unzip tensorflow-darwin-x64.zip
           mv tensorflow-darwin-x64/Library/tensorflow-2.4.0 ~/Library/
 
-      - name: Build
+      - name: Build tensorflow/swift-apis
         run: |
           TOOLCHAINS=org.swift.50202012141a swift build -v -Xswiftc -DTENSORFLOW_USE_STANDARD_TOOLCHAIN -Xcc -I${HOME}/Library/tensorflow-2.4.0/usr/include -Xlinker -L${HOME}/Library/tensorflow-2.4.0/usr/lib
+
     # - name: Run tests
     #   run: |
     #     DYLD_LIBRARY_PATH=${HOME}/Library/tensorflow-2.4.0/usr/lib TOOLCHAINS=org.swift.50202012141a swift test -v -Xswiftc -DTENSORFLOW_USE_STANDARD_TOOLCHAIN -Xcc -I${HOME}/Library/tensorflow-2.4.0/usr/include -Xlinker -L${HOME}/Library/tensorflow-2.4.0/usr/lib
+
+      - name: Build toolchain package
+        run: |
+          pkgbuild --identifier org.tensorflow-${DATE}              \
+                   --install-location /Library/Developer/Toolchains/${TOOLCHAIN_NAME}.xctoolchain  \
+                   --version 5.0.${DATE} \ 
+                   --root ${TOOLCHAIN_NAME}
+                   ${TOOLCHAIN_NAME}.pkg
+
+# pkgbuild --root "${TOOLCHAIN_PREFIX}" --install-location "${DARWIN_TOOLCHAIN_INSTALL_LOCATION}" "${DARWIN_INSTALLER_PACKAGE}" \
+#          --version "${DARWIN_TOOLCHAIN_VERSION}" --identifier "${DARWIN_BUNDLE_IDENTIFIER}" --sign "${DARWIN_INSTALLER_CERT}" \
+#          --scripts "${DARWIN_SCRIPTS}"
+# 
+# TOOLCHAIN_PREFIX=/Users/danielzheng/swift-dev/swift-nightly-install//Library/Developer/Toolchains/swift-LOCAL-2021-01-04-a.xctoolchain/
+# DARWIN_BUNDLE_IDENTIFIER=local.20210104
+# DARWIN_INSTALLER_CERT=cert
+# DARWIN_INSTALLER_PACKAGE=pkg
+# DARWIN_TOOLCHAIN_INSTALL_LOCATION=/Library/Developer/Toolchains/swift-LOCAL-2021-01-04-a.xctoolchain
+# DARWIN_TOOLCHAIN_VERSION=5.0.20210104
+# /DARWIN_SCRIPTS=Users/danielzheng/swift-dev/swift/utils/darwin-installer-scripts
+
+          # pkgbuild --identifier org.compnerd.dt.toolchain.${{ parameters.alias }}-$(date -j +%Y%m%d)              \
+          #          --install-location /Library/Developer/Toolchains/unknown-Asserts-$(Build.BuildId).xctoolchain  \
+          #          --scripts $(Build.BinariesDirectory)/pkgscripts                                                \
+          #          --version $(Build.BuildId)                                                                     \
+          #          --root $(toolchain.directory)                                                                  \
+          #          $(Build.ArtifactStagingDirectory)/toolchain-darwin-${{ parameters.host }}.pkg
